@@ -76,7 +76,7 @@
 <body>
 <header>
   <h1>✈️ Vacation Optimizer</h1>
-  <p>Enter a destination and a flexible window. We compare every possible departure date in that window, add up flight + hotel + cruise, and rank the cheapest trips first — total cost first, breakdown second.</p>
+  <p>Enter a destination and a flexible window. We compare every possible departure date in that window, add up flight + hotel — plus cruise or theme parks only when you check them — and rank the cheapest trips first — total cost first, breakdown second.</p>
 </header>
 
 <main>
@@ -105,7 +105,10 @@
         <button type="button" class="preset-btn" data-preset="Europe">Europe</button>
         <button type="button" class="preset-btn" data-preset="Hawaii">Hawaii</button>
         <button type="button" class="preset-btn" data-preset="Florida">Florida</button>
+        <button type="button" class="preset-btn" data-preset="Orlando">Orlando</button>
+        <button type="button" class="preset-btn" data-preset="Anaheim">Anaheim</button>
       </div>
+      <p id="parkSuggestion" class="muted" style="display:none">🎢 Orlando/Anaheim area — theme parks may be relevant here. Check “Theme parks” below if you want park tickets included (not forced on).</p>
       <form id="tripForm">
         <label for="destination">Destination</label>
         <input id="destination" type="text" value="Caribbean" required>
@@ -127,14 +130,22 @@
         <div class="checks">
           <label><input id="useFlight" type="checkbox" checked> Flight</label>
           <label><input id="useHotel" type="checkbox" checked> Hotel</label>
-          <label><input id="useCruise" type="checkbox" checked> Cruise</label>
+          <label><input id="useCruise" type="checkbox"> Cruise</label>
+          <label><input id="useParks" type="checkbox"> Theme parks</label>
+        </div>
+        <div id="parkControls" style="display:none">
+          <div class="row">
+            <div><label for="parkSelect">Theme park (estimate — see official site for exact prices)</label><select id="parkSelect"><option value="wdw">Walt Disney World (Orlando)</option><option value="disneyland">Disneyland (California)</option><option value="universalOrlando">Universal Orlando</option><option value="universalHollywood">Universal Hollywood</option><option value="legolandFlorida">Legoland Florida</option><option value="seaworldOrlando">SeaWorld Orlando</option></select></div>
+            <div><label for="parkDays">Park days (1–7)</label><input id="parkDays" type="number" min="1" max="7" value="7"></div>
+          </div>
+          <p class="muted">Theme park prices are estimates only — there is no theme-park ticket API connector. Multi-day ticket per person = 1-day price × days<sup>0.75</sup>, so the average price per day falls as days rise. Children at 90% of the adult price. Check the park's official site for exact ticket prices.</p>
         </div>
         <div class="row">
           <div><label for="stars">Hotel stars</label><select id="stars"><option value="3">3 stars</option><option value="4" selected>4 stars</option><option value="5">5 stars</option></select></div>
           <div><label for="sortBy">Sort by</label><select id="sortBy"><option value="total">Cheapest total</option><option value="perPerson">Cheapest per person</option><option value="value">Best value</option></select></div>
         </div>
         <div class="row">
-          <div><label for="cruiseLength">Cruise length filter</label><select id="cruiseLength"><option value="Any">Any cruise length</option><option value="Short">Short (≤4 nights)</option><option value="Medium">Medium (5–6 nights)</option><option value="Long">Long (7+ nights)</option></select></div>
+          <div id="cruiseOptions" style="display:none"><label for="cruiseLength">Cruise length filter</label><select id="cruiseLength"><option value="Any">Any cruise length</option><option value="Short">Short (≤4 nights)</option><option value="Medium">Medium (5–6 nights)</option><option value="Long">Long (7+ nights)</option></select></div>
           <div><label>&nbsp;</label><div class="checks">
             <label><input id="flex3" type="checkbox"> Flexible ±3 days</label>
             <label><input id="hideWeekends" type="checkbox"> Hide weekend departures</label>
@@ -178,14 +189,22 @@
     <h2>Exact options — SLC → Cancun demo (snapshot, not live)</h2>
     <p><strong>Route:</strong> Salt Lake City (SLC) → Cancun (CUN), <strong>depart 2027-01-27, return 2027-02-03</strong>, 7 nights, 2 adults, economy. Searched 2026-11-04.</p>
     <p class="muted">Flights: Duffel search, coverage complete — 2,339 offers scanned. Hotels: Expedia guest search, 50 hotels returned, sorted by total including mandatory taxes and fees. Hotel results via Expedia. Prices are a snapshot from that search and will change — re-check before booking. Nothing here is booked, and no payment is taken in this app.</p>
-    <p class="muted"><strong>Cruise is still an estimate, not an exact offer.</strong> There is no cruise connector and no usable public cruise-price API: Expedia Cruises is a website search, and commercial cruise APIs (for example Widgety, Cruise Itinerary, Travelopro) need a key or contract. So the cruise line in bundles below uses the v2 estimate ($1,689.60 + 8% tax = $1,824.77) and is labeled as such. To get an exact cruise price, search Expedia Cruises or a cruise line site directly for the same dates.</p>
+    <p class="muted" id="exactCruiseNote" style="display:none"><strong>Cruise is still an estimate, not an exact offer.</strong> There is no cruise connector and no usable public cruise-price API: Expedia Cruises is a website search, and commercial cruise APIs (for example Widgety, Cruise Itinerary, Travelopro) need a key or contract. So the cruise line in bundles below uses the v2 estimate ($1,689.60 + 8% tax = $1,824.77) and is labeled as such. To get an exact cruise price, search Expedia Cruises or a cruise line site directly for the same dates.</p>
     <h3>Pick a flight</h3>
     <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Airline</th><th>Outbound</th><th>Return</th><th>Stops (total)</th><th>Travel time</th><th>Total (2 adults)</th></tr></thead><tbody id="exactFlights"></tbody></table></div>
     <h3>Pick a hotel</h3>
     <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Hotel</th><th>Stars</th><th>Guest review</th><th>Room</th><th>Total incl. taxes &amp; fees (7 nights)</th></tr></thead><tbody id="exactHotels"></tbody></table></div>
+    <div id="exactParkControls" style="display:none">
+      <h3>Theme parks (estimate)</h3>
+      <p class="muted">Theme parks are off unless you check “Theme parks” in Your trip above. When on, pick a park and days here — totals below recalculate. Prices are estimates only; check the park's official site for exact ticket prices.</p>
+      <div class="row">
+        <div><label for="exactParkSelect">Theme park</label><select id="exactParkSelect"><option value="wdw">Walt Disney World (Orlando)</option><option value="disneyland">Disneyland (California)</option><option value="universalOrlando">Universal Orlando</option><option value="universalHollywood">Universal Hollywood</option><option value="legolandFlorida">Legoland Florida</option><option value="seaworldOrlando">SeaWorld Orlando</option></select></div>
+        <div><label for="exactParkDays">Park days (1–7)</label><input id="exactParkDays" type="number" min="1" max="7" value="7"></div>
+      </div>
+    </div>
     <h3>Bundles — pick a flight and hotel above and the totals recalculate</h3>
-    <p class="muted">Bundle totals = flight + hotel (+ cruise estimate + 8% cruise tax where included). Hotel totals from Expedia already include mandatory taxes and fees, and flight totals are the Duffel totals, so no extra tax is added to those two lines. The old v2 10% bundle discount is <strong>not</strong> applied to exact offers — it was an estimate, not a real offer. Per person = bundle total ÷ 2 adults.</p>
-    <div class="table-wrap"><table><thead><tr><th>Bundle</th><th>Flight</th><th>Hotel</th><th>Cruise</th><th>Total</th><th>Per person</th><th>Pin</th></tr></thead><tbody id="exactBundles"></tbody></table></div>
+    <p class="muted">Bundle totals = flight + hotel + (cruise estimate + 8% cruise tax only when cruise is checked) + (theme park tickets only when theme parks are checked). Hotel totals from Expedia already include mandatory taxes and fees, and flight totals are the Duffel totals, so no extra tax is added to those two lines. The old v2 10% bundle discount is <strong>not</strong> applied to exact offers — it was an estimate, not a real offer. Per person = bundle total ÷ 2 adults.</p>
+    <div class="table-wrap"><table><thead id="exactBundlesHead"></thead><tbody id="exactBundles"></tbody></table></div>
     <p><button type="button" id="bestValueBtn" class="small-btn">Apply Best value picks</button> <span class="muted">Best value = cheapest flight + the highest guest-review hotel with a total of $350 or less in this Expedia result set (Hotel Los Girasoles Cancun, 8.8, $339.29). That definition is fixed in the app, not a claim about all hotels.</span></p>
     <div id="exactCompareWrap" style="display:none">
       <h3>Compare bundles — up to 3 pinned</h3>
@@ -222,7 +241,8 @@
       <li><strong>Cruise:</strong> preset base per person by length category — Short ≤4 nights (50% of long base), Medium 5–6 nights (72%), Long 7+ nights (100%) — children at 50%.</li>
       <li><strong>Taxes/fees (estimate):</strong> 12% on hotel, 8% on cruise. No flight tax in this model.</li>
       <li><strong>Bundle discount (estimate, not a real offer):</strong> 10% off hotel when flight + hotel are both checked.</li>
-      <li><strong>Total = flight + hotel + cruise + taxes − bundle discount.</strong> Per-person = total ÷ (adults + children). Savings = most-expensive window total − this window total.</li>
+      <li><strong>Theme parks (estimate only):</strong> 1-day adult base — Walt Disney World $165, Disneyland $160, Universal Orlando $140, Universal Hollywood $130, Legoland Florida $110, SeaWorld Orlando $105; children at 90% of adult. Multi-day per person = 1-day price × days<sup>0.75</sup>. No tax added to park tickets in this model. Check the park's official site for exact prices.</li>
+      <li><strong>Total = flight + hotel + cruise (only if cruise checked) + theme parks (only if theme parks checked) + taxes − bundle discount.</strong> A component contributes to a total only when its checkbox is on.</li> Per-person = total ÷ (adults + children). Savings = most-expensive window total − this window total.</li>
       <li><strong>Book now or wait (estimate only):</strong> bottom quartile of totals in your window = “Low vs typical”, middle = “Typical”, top quartile = “High vs typical”. This is a comparison inside your window, <strong>not</strong> a real price prediction.</li>
     </ul>
   </section>
@@ -244,7 +264,9 @@ const PRESETS = {
   'Alaska': { flight: 520, hotel: 180, cruise: 1100 },
   'Europe': { flight: 750, hotel: 170, cruise: 800 },
   'Hawaii': { flight: 600, hotel: 210, cruise: 950 },
-  'Florida': { flight: 350, hotel: 140, cruise: 650 }
+  'Florida': { flight: 350, hotel: 140, cruise: 650 },
+  'Orlando': { flight: 350, hotel: 140, cruise: 650 },
+  'Anaheim': { flight: 480, hotel: 180, cruise: 900 }
 };
 function presetFor(dest) { return PRESETS[dest] || PRESETS['Caribbean']; }
 
@@ -276,6 +298,21 @@ function priceCruise(nights, adults, children, departure, dest) {
   const perAdult = p.cruise * mult * seasonFactor(departure.getMonth() + 1) * (0.90 + rand() * 0.20);
   return adults * perAdult + children * perAdult * 0.5;
 }
+const THEME_PARKS = {
+  wdw: { name: 'Walt Disney World (Orlando)', adult1Day: 165 },
+  disneyland: { name: 'Disneyland (California)', adult1Day: 160 },
+  universalOrlando: { name: 'Universal Orlando', adult1Day: 140 },
+  universalHollywood: { name: 'Universal Hollywood', adult1Day: 130 },
+  legolandFlorida: { name: 'Legoland Florida', adult1Day: 110 },
+  seaworldOrlando: { name: 'SeaWorld Orlando', adult1Day: 105 }
+};
+function priceParks(parkId, days, adults, children) {
+  const park = THEME_PARKS[parkId] || THEME_PARKS.wdw;
+  const d = Math.min(7, Math.max(1, days || 1));
+  const perPerson = park.adult1Day * Math.pow(d, 0.75);
+  const childPerPerson = perPerson * 0.90;
+  return { park: park.name, days: d, adult1Day: park.adult1Day, perAdult: perPerson, perChild: childPerPerson, total: adults * perPerson + children * childPerPerson };
+}
 async function fetchLiveFlight(params) { return null; }
 async function fetchLiveHotel(params) { return null; }
 async function fetchLiveCruise(params) { return null; }
@@ -284,14 +321,17 @@ function computeWindow(dep, opts) {
   const flight = opts.useFlight ? priceFlight(dep, opts.destination, opts.adults, opts.children, opts.directOnly) : 0;
   const hotel = opts.useHotel ? priceHotel(dep, opts.nights, opts.destination, opts.stars) : 0;
   const cruise = opts.useCruise ? priceCruise(opts.nights, opts.adults, opts.children, dep, opts.destination) : 0;
-  const subtotal = flight + hotel + cruise;
+  const parkDays = opts.useParks ? Math.min(7, Math.max(1, opts.parkDays || opts.nights)) : 0;
+  const parksInfo = opts.useParks ? priceParks(opts.parkId || 'wdw', parkDays, opts.adults, opts.children) : { park: '', days: 0, total: 0 };
+  const parks = parksInfo.total;
+  const subtotal = flight + hotel + cruise + parks;
   const taxes = hotel * 0.12 + cruise * 0.08;
   const bundleDiscount = (opts.useFlight && opts.useHotel) ? hotel * 0.10 : 0;
   const total = subtotal + taxes - bundleDiscount;
   const people = Math.max(1, opts.adults + opts.children);
   let weekendNights = 0;
   for (let i = 0; i < opts.nights; i++) { const n = addDays(dep, i); if (n.getDay() === 5 || n.getDay() === 6) weekendNights++; }
-  return { departure: fmtDate(dep), returnDate: fmtDate(addDays(dep, opts.nights)), flight, hotel, cruise, subtotal, taxes, bundleDiscount, total, perPerson: total / people, weekendNights, valueScore: total / (1 + 0.08 * weekendNights), cruiseCategory: cruiseCategory(opts.nights), underBudget: opts.budget ? total <= opts.budget : null };
+  return { departure: fmtDate(dep), returnDate: fmtDate(addDays(dep, opts.nights)), flight, hotel, cruise, parks, parkName: parksInfo.park, parkDays: parksInfo.days, subtotal, taxes, bundleDiscount, total, perPerson: total / people, weekendNights, valueScore: total / (1 + 0.08 * weekendNights), cruiseCategory: cruiseCategory(opts.nights), underBudget: opts.budget ? total <= opts.budget : null };
 }
 function quartile(sortedTotals, q) { if (!sortedTotals.length) return 0; const idx = Math.floor(q * (sortedTotals.length - 1)); return sortedTotals[idx]; }
 function cheapestMonthSummary(results) {
@@ -308,7 +348,7 @@ function calendarCells(all, filtered) {
 function addPin(pins, item) { if (pins.some(p => p.departure === item.departure)) return pins; if (pins.length >= 3) return pins; return pins.concat([item]); }
 
 function generateResults(opts) {
-  const o = Object.assign({ stars: 4, directOnly: false, hideWeekends: false, cruiseLength: 'Any', sortBy: 'total', flex3: false }, opts);
+  const o = Object.assign({ stars: 4, directOnly: false, hideWeekends: false, cruiseLength: 'Any', sortBy: 'total', flex3: false, useParks: false, parkId: 'wdw', parkDays: null }, opts);
   const candidates = [];
   let d = new Date(o.earliest); const end = new Date(o.latest);
   while (d <= end) { candidates.push(computeWindow(new Date(d), o)); d = addDays(d, 1); }
@@ -340,7 +380,7 @@ function generateResults(opts) {
 if (typeof document !== 'undefined' && document.getElementById) {
   let lastResult = null, lastOpts = null, pinned = [], selectedDate = null;
   function readOpts() {
-    return { destination: document.getElementById('destination').value.trim() || 'Anywhere', earliest: document.getElementById('earliest').value, latest: document.getElementById('latest').value, nights: parseInt(document.getElementById('nights').value, 10), adults: parseInt(document.getElementById('adults').value, 10), children: parseInt(document.getElementById('children').value, 10) || 0, budget: parseFloat(document.getElementById('budget').value) || null, useFlight: document.getElementById('useFlight').checked, useHotel: document.getElementById('useHotel').checked, useCruise: document.getElementById('useCruise').checked, stars: parseInt(document.getElementById('stars').value, 10), sortBy: document.getElementById('sortBy').value, cruiseLength: document.getElementById('cruiseLength').value, flex3: document.getElementById('flex3').checked, hideWeekends: document.getElementById('hideWeekends').checked, directOnly: document.getElementById('directOnly').checked };
+    return { destination: document.getElementById('destination').value.trim() || 'Anywhere', earliest: document.getElementById('earliest').value, latest: document.getElementById('latest').value, nights: parseInt(document.getElementById('nights').value, 10), adults: parseInt(document.getElementById('adults').value, 10), children: parseInt(document.getElementById('children').value, 10) || 0, budget: parseFloat(document.getElementById('budget').value) || null, useFlight: document.getElementById('useFlight').checked, useHotel: document.getElementById('useHotel').checked, useCruise: document.getElementById('useCruise').checked, useParks: document.getElementById('useParks').checked, parkId: document.getElementById('parkSelect').value, parkDays: parseInt(document.getElementById('parkDays').value, 10) || null, stars: parseInt(document.getElementById('stars').value, 10), sortBy: document.getElementById('sortBy').value, cruiseLength: document.getElementById('cruiseLength').value, flex3: document.getElementById('flex3').checked, hideWeekends: document.getElementById('hideWeekends').checked, directOnly: document.getElementById('directOnly').checked };
   }
   function renderSaved() {
     const el = document.getElementById('savedSearches'); if (!el) return;
@@ -355,7 +395,10 @@ if (typeof document !== 'undefined' && document.getElementById) {
     const wrap = document.getElementById('compareWrap'); if (!pinned.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
     document.getElementById('compareMsg').textContent = pinned.length + ' of 3 pinned. Click Pin again on a pinned row to unpin it.';
-    const rows = [['Departure', 'departure'], ['Return', 'returnDate'], ['Total', 'total'], ['Per person', 'perPerson'], ['Flight', 'flight'], ['Hotel', 'hotel'], ['Cruise', 'cruise'], ['Taxes/fees', 'taxes'], ['Bundle discount', 'bundleDiscount'], ['Saving vs max', 'savingsVsMax']];
+    const rows = [['Departure', 'departure'], ['Return', 'returnDate'], ['Total', 'total'], ['Per person', 'perPerson'], ['Flight', 'flight'], ['Hotel', 'hotel']];
+    if (lastOpts && lastOpts.useCruise) rows.push(['Cruise', 'cruise']);
+    if (lastOpts && lastOpts.useParks) rows.push(['Theme parks', 'parks']);
+    rows.push(['Taxes/fees', 'taxes'], ['Bundle discount', 'bundleDiscount'], ['Saving vs max', 'savingsVsMax']);
     let html = '<table><thead><tr><th></th>' + pinned.map(p => '<th>' + p.departure + '</th>').join('') + '</tr></thead><tbody>';
     rows.forEach(([label, key]) => { html += '<tr><td><strong>' + label + '</strong></td>' + pinned.map(p => '<td>' + (key === 'departure' || key === 'returnDate' ? p[key] : money(p[key] || 0)) + '</td>').join('') + '</tr>'; });
     html += '</tbody></table>';
@@ -365,7 +408,11 @@ if (typeof document !== 'undefined' && document.getElementById) {
     if (!lastResult) return;
     const r = lastResult.filtered.find(x => x.departure === dateStr); if (!r) return;
     selectedDate = dateStr;
-    document.getElementById('selectedDetail').innerHTML = '<div class="card" style="margin-bottom:12px"><h3>Selected: ' + r.departure + ' → ' + r.returnDate + '</h3><p><span class="total-big">' + money(r.total) + '</span><span class="breakdown">Flight ' + money(r.flight) + ' · Hotel ' + money(r.hotel) + ' · Cruise ' + money(r.cruise) + ' · Taxes ' + money(r.taxes) + ' · Bundle discount −' + money(r.bundleDiscount) + ' · Per person ' + money(r.perPerson) + '</span></p><p><strong>Book now or wait:</strong> ' + bookIndicator(r.total, lastResult.q1, lastResult.q3) + '</p></div>';
+    var parts = ['Flight ' + money(r.flight), 'Hotel ' + money(r.hotel)];
+    if (lastOpts && lastOpts.useCruise) parts.push('Cruise ' + money(r.cruise));
+    if (lastOpts && lastOpts.useParks) parts.push('Theme parks (' + (r.parkName || '') + ', ' + r.parkDays + ' days) ' + money(r.parks));
+    parts.push('Taxes ' + money(r.taxes), 'Bundle discount −' + money(r.bundleDiscount), 'Per person ' + money(r.perPerson));
+    document.getElementById('selectedDetail').innerHTML = '<div class="card" style="margin-bottom:12px"><h3>Selected: ' + r.departure + ' → ' + r.returnDate + '</h3><p><span class="total-big">' + money(r.total) + '</span><span class="breakdown">' + parts.join(' · ') + '</span></p><p><strong>Book now or wait:</strong> ' + bookIndicator(r.total, lastResult.q1, lastResult.q3) + '</p></div>';
     document.querySelectorAll('.cal-cell').forEach(c => c.classList.toggle('selected', c.getAttribute('data-date') === dateStr));
   }
   function renderCalendar() {
@@ -399,7 +446,7 @@ if (typeof document !== 'undefined' && document.getElementById) {
     const res = generateResults(opts); lastResult = res;
     const empty = document.getElementById('emptyState');
     if (!res.filtered.length) {
-      empty.style.display = 'block'; empty.innerHTML = '<strong>No dates match your filters.</strong> Try widening the window, raising the budget, clearing the cruise-length filter, or unchecking “Hide weekend departures”. <button type="button" class="small-btn" id="emptyClear">Clear filters</button>';
+      empty.style.display = 'block'; empty.innerHTML = '<strong>No dates match your filters.</strong> Try widening the window, raising the budget, clearing the length filter, or unchecking “Hide weekend departures”. <button type="button" class="small-btn" id="emptyClear">Clear filters</button>';
       document.getElementById('emptyClear').addEventListener('click', () => { document.getElementById('budget').value = ''; document.getElementById('cruiseLength').value = 'Any'; document.getElementById('hideWeekends').checked = false; runSearch(); });
       document.getElementById('results').innerHTML = ''; document.getElementById('chartWrap').style.display = 'none'; document.getElementById('calendarWrap').style.display = 'none'; document.getElementById('stickySummary').style.display = 'none'; renderCompare(); return;
     }
@@ -415,9 +462,9 @@ if (typeof document !== 'undefined' && document.getElementById) {
     [...res.filtered].sort((a, b) => a.departure < b.departure ? -1 : 1).forEach(r => { const bar = document.createElement('div'); bar.className = 'bar' + (r.total === min ? ' cheapest' : '') + (r.total === max ? ' expensive' : ''); bar.style.height = Math.max(8, Math.round((r.total / max) * 100)) + '%'; bar.title = r.departure + ': ' + money(r.total); const tip = document.createElement('span'); tip.textContent = r.departure + ' — ' + money(r.total); bar.appendChild(tip); chart.appendChild(bar); });
     document.getElementById('chartWrap').style.display = 'block';
     renderCalendar();
-    let html = '<table><thead><tr><th>#</th><th>Depart → Return</th><th>Total</th><th>Per person</th><th>Flight</th><th>Hotel</th><th>Cruise</th><th>Taxes</th><th>Bundle −</th><th>Flex ±3</th><th>Saving</th><th>Pin</th></tr></thead><tbody>';
-    top.forEach((r, i) => { html += '<tr><td>' + (i + 1) + '</td><td>' + r.departure + ' → ' + r.returnDate + '</td><td><span class="total-big">' + money(r.total) + '</span><span class="breakdown">' + money(r.flight) + ' + ' + money(r.hotel) + ' + ' + money(r.cruise) + ' + ' + money(r.taxes) + ' − ' + money(r.bundleDiscount) + '</span></td><td>' + money(r.perPerson) + '</td><td>' + money(r.flight) + '</td><td>' + money(r.hotel) + '</td><td>' + money(r.cruise) + '</td><td>' + money(r.taxes) + '</td><td>−' + money(r.bundleDiscount) + '</td><td>' + (r.flexTotal ? money(r.flexTotal) + ' (' + r.flexDate + ')' : '—') + '</td><td>' + money(r.savingsVsMax) + '</td><td><button type="button" class="pin-btn" data-pin="' + r.departure + '">Pin</button></td></tr>'; });
-    html += '</tbody></table><p class="muted">Estimates only. Bundle discount is an estimate (10% off hotel with flight+hotel), not a real offer. Taxes are estimates: 12% hotel, 8% cruise.</p>';
+    let html = '<table><thead><tr><th>#</th><th>Depart → Return</th><th>Total</th><th>Per person</th><th>Flight</th><th>Hotel</th>' + (opts.useCruise ? '<th>Cruise</th>' : '') + (opts.useParks ? '<th>Theme parks</th>' : '') + '<th>Taxes</th><th>Bundle −</th><th>Flex ±3</th><th>Saving</th><th>Pin</th></tr></thead><tbody>';
+    top.forEach((r, i) => { var bdParts = [money(r.flight), money(r.hotel)]; if (opts.useCruise) bdParts.push(money(r.cruise)); if (opts.useParks) bdParts.push(money(r.parks)); bdParts.push(money(r.taxes), '− ' + money(r.bundleDiscount)); html += '<tr><td>' + (i + 1) + '</td><td>' + r.departure + ' → ' + r.returnDate + '</td><td><span class="total-big">' + money(r.total) + '</span><span class="breakdown">' + bdParts.join(' + ') + '</span></td><td>' + money(r.perPerson) + '</td><td>' + money(r.flight) + '</td><td>' + money(r.hotel) + '</td>' + (opts.useCruise ? '<td>' + money(r.cruise) + '</td>' : '') + (opts.useParks ? '<td>' + money(r.parks) + '</td>' : '') + '<td>' + money(r.taxes) + '</td><td>−' + money(r.bundleDiscount) + '</td><td>' + (r.flexTotal ? money(r.flexTotal) + ' (' + r.flexDate + ')' : '—') + '</td><td>' + money(r.savingsVsMax) + '</td><td><button type="button" class="pin-btn" data-pin="' + r.departure + '">Pin</button></td></tr>'; });
+    html += '</tbody></table><p class="muted">Estimates only. Bundle discount is an estimate (10% off hotel with flight+hotel), not a real offer. Taxes are estimates: 12% hotel, 8% cruise (cruise tax only when cruise is checked). Theme park prices are estimates only — check the park\'s official site for exact prices.</p>';
     document.getElementById('results').innerHTML = html;
     document.querySelectorAll('[data-pin]').forEach(b => b.addEventListener('click', () => { const r = res.sorted.find(x => x.departure === b.getAttribute('data-pin')); if (!r) return; if (pinned.some(p => p.departure === r.departure)) { pinned = pinned.filter(p => p.departure !== r.departure); } else { const before = pinned.length; pinned = addPin(pinned, r); if (pinned.length === before) { document.getElementById('compareMsg') && (document.getElementById('compareMsg').textContent = 'Compare is full — unpin one to add another (max 3).'); document.getElementById('compareWrap').style.display = 'block'; } } renderCompare(); }));
     renderCompare(); showSelected(cheapest.departure);
@@ -450,13 +497,29 @@ const DEMO_EXACT = {
     { id: 'H5', name: 'Hotel Los Girasoles Cancun', stars: 3.0, reviewScore: 8.8, reviewCount: 447, room: 'Twin Room', total: 339.29, refundable: true }
   ]
 };
-function buildBundle(kind, flight, hotel) {
+function buildBundle(kind, flight, hotel, extra) {
+  const ex = extra || {};
   const f = kind === 'Hotel only' ? 0 : (flight ? flight.total : 0);
   const h = (kind === 'Flight only') ? 0 : (hotel ? hotel.total : 0);
-  const cruise = (kind === 'Flight + Hotel + Cruise (cruise estimate)') ? DEMO_EXACT.cruiseEstimate : 0;
+  const cruise = (kind === 'Flight + Hotel + Cruise (cruise estimate)' || kind === 'Flight + Hotel + Theme Parks + Cruise (cruise estimate)') ? DEMO_EXACT.cruiseEstimate : 0;
   const cruiseTax = cruise * DEMO_EXACT.cruiseTaxRate;
-  const total = f + h + cruise + cruiseTax;
-  return { kind, flight: f, hotel: h, cruise, cruiseTax, total, perPerson: total / DEMO_EXACT.adults };
+  const parks = (kind.indexOf('Theme Parks') !== -1) ? (ex.parks || 0) : 0;
+  const total = f + h + cruise + cruiseTax + parks;
+  return { kind, flight: f, hotel: h, cruise, cruiseTax, parks, total, perPerson: total / DEMO_EXACT.adults };
+}
+function buildExactBundles(flight, hotel, opts) {
+  const o = opts || {};
+  const list = [
+    buildBundle('Flight only', flight, hotel),
+    buildBundle('Hotel only', flight, hotel),
+    buildBundle('Flight + Hotel', flight, hotel)
+  ];
+  if (o.includeCruise) list.push(buildBundle('Flight + Hotel + Cruise (cruise estimate)', flight, hotel));
+  if (o.parks) {
+    list.push(buildBundle('Flight + Hotel + Theme Parks', flight, hotel, { parks: o.parks }));
+    if (o.includeCruise) list.push(buildBundle('Flight + Hotel + Theme Parks + Cruise (cruise estimate)', flight, hotel, { parks: o.parks }));
+  }
+  return list;
 }
 function bestValuePicks() {
   const flight = DEMO_EXACT.flights.reduce((a, b) => (b.total < a.total ? b : a));
@@ -464,7 +527,7 @@ function bestValuePicks() {
   const hotel = underCap.reduce((a, b) => (b.reviewScore > a.reviewScore ? b : a));
   return { flight, hotel };
 }
-if (typeof module !== 'undefined' && module.exports) { module.exports = { generateResults, computeWindow, priceFlight, priceHotel, priceCruise, hashString, seededRandom, calendarCells, addPin, cheapestMonthSummary, bookIndicator, PRESETS, DEMO_EXACT, buildBundle, bestValuePicks }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { generateResults, computeWindow, priceFlight, priceHotel, priceCruise, priceParks, THEME_PARKS, hashString, seededRandom, calendarCells, addPin, cheapestMonthSummary, bookIndicator, PRESETS, DEMO_EXACT, buildBundle, buildExactBundles, bestValuePicks }; }
 </script>
 <script>
 (function () {
@@ -484,34 +547,47 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
     }).join('');
     document.querySelectorAll('input[name="exactHotel"]').forEach(function (r) { r.addEventListener('change', function () { selHotel = DEMO_EXACT.hotels.find(function (h) { return h.id === r.value; }) || selHotel; renderBundles(); }); });
   }
+  function exactParksEnabled() { var el = document.getElementById('useParks'); return !!(el && el.checked); }
+  function exactCruiseEnabled() { var el = document.getElementById('useCruise'); return !!(el && el.checked); }
+  function exactParksAmount() {
+    if (!exactParksEnabled()) return 0;
+    var sel = document.getElementById('exactParkSelect'); var daysEl = document.getElementById('exactParkDays');
+    var days = daysEl ? (parseInt(daysEl.value, 10) || 7) : 7;
+    var info = priceParks(sel ? sel.value : 'wdw', days, DEMO_EXACT.adults, 0);
+    return info.total;
+  }
   function bundleRows() {
-    return [
-      buildBundle('Flight only', selFlight, selHotel),
-      buildBundle('Hotel only', selFlight, selHotel),
-      buildBundle('Flight + Hotel', selFlight, selHotel),
-      buildBundle('Flight + Hotel + Cruise (cruise estimate)', selFlight, selHotel),
-      (function () { var bv = bestValuePicks(); var b = buildBundle('Flight + Hotel', bv.flight, bv.hotel); b.kind = 'Best value'; b.flightLabel = bv.flight.airline + ' ' + moneyR(bv.flight.total); b.hotelLabel = bv.hotel.name + ' ' + moneyR(bv.hotel.total); return b; })()
-    ];
+    var rows = buildExactBundles(selFlight, selHotel, { includeCruise: exactCruiseEnabled(), parks: exactParksAmount() });
+    var bv = bestValuePicks(); var b = buildBundle('Flight + Hotel', bv.flight, bv.hotel); b.kind = 'Best value'; b.flightLabel = bv.flight.airline + ' ' + moneyR(bv.flight.total); b.hotelLabel = bv.hotel.name + ' ' + moneyR(bv.hotel.total); rows.push(b);
+    return rows;
   }
   function renderBundles() {
     var rows = bundleRows();
+    var showCruise = exactCruiseEnabled(), showParks = exactParksEnabled();
+    document.getElementById('exactBundlesHead').innerHTML = '<tr><th>Bundle</th><th>Flight</th><th>Hotel</th>' + (showCruise ? '<th>Cruise (est.)</th>' : '') + (showParks ? '<th>Theme parks (est.)</th>' : '') + '<th>Total</th><th>Per person</th><th>Pin</th></tr>';
     document.getElementById('exactBundles').innerHTML = rows.map(function (b, i) {
       var cruiseCell = b.cruise ? moneyR(b.cruise) + ' est. + ' + moneyR(b.cruiseTax) + ' tax' : '—';
       var detail = b.kind === 'Best value' ? ('<br><span class="muted">' + (b.flightLabel || '') + ' · ' + (b.hotelLabel || '') + '</span>') : ('<br><span class="muted">' + selFlight.airline + ' · ' + selHotel.name + '</span>');
-      return '<tr><td><strong>' + b.kind + '</strong>' + detail + '</td><td>' + (b.flight ? moneyR(b.flight) : '—') + '</td><td>' + (b.hotel ? moneyR(b.hotel) : '—') + '</td><td>' + cruiseCell + '</td><td><strong>' + moneyR(b.total) + '</strong></td><td>' + moneyR(b.perPerson) + '</td><td><button type="button" class="pin-btn" data-bundle-pin="' + i + '">Pin</button></td></tr>';
+      return '<tr><td><strong>' + b.kind + '</strong>' + detail + '</td><td>' + (b.flight ? moneyR(b.flight) : '—') + '</td><td>' + (b.hotel ? moneyR(b.hotel) : '—') + '</td>' + (showCruise ? '<td>' + cruiseCell + '</td>' : '') + (showParks ? '<td>' + (b.parks ? moneyR(b.parks) : '—') + '</td>' : '') + '<td><strong>' + moneyR(b.total) + '</strong></td><td>' + moneyR(b.perPerson) + '</td><td><button type="button" class="pin-btn" data-bundle-pin="' + i + '">Pin</button></td></tr>';
     }).join('');
     document.querySelectorAll('[data-bundle-pin]').forEach(function (btn) { btn.addEventListener('click', function () { var b = rows[parseInt(btn.getAttribute('data-bundle-pin'), 10)]; if (!b) return; var key = b.kind + '|' + Math.round(b.total); if (pinnedBundles.some(function (p) { return p.key === key; })) { pinnedBundles = pinnedBundles.filter(function (p) { return p.key !== key; }); } else if (pinnedBundles.length < 3) { pinnedBundles.push(Object.assign({ key: key }, b)); } renderBundleCompare(); }); });
   }
   function renderBundleCompare() {
     var wrap = document.getElementById('exactCompareWrap'); if (!pinnedBundles.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
-    var labels = [['Bundle', 'kind'], ['Flight', 'flight'], ['Hotel', 'hotel'], ['Cruise (est.)', 'cruise'], ['Cruise tax (est.)', 'cruiseTax'], ['Total', 'total'], ['Per person', 'perPerson']];
+    var labels = [['Bundle', 'kind'], ['Flight', 'flight'], ['Hotel', 'hotel']];
+    if (exactCruiseEnabled()) labels.push(['Cruise (est.)', 'cruise'], ['Cruise tax (est.)', 'cruiseTax']);
+    if (exactParksEnabled()) labels.push(['Theme parks (est.)', 'parks']);
+    labels.push(['Total', 'total'], ['Per person', 'perPerson']);
     var html = '<table><thead><tr><th></th>' + pinnedBundles.map(function (p) { return '<th>' + p.kind + '</th>'; }).join('') + '</tr></thead><tbody>';
     labels.forEach(function (pair) { html += '<tr><td><strong>' + pair[0] + '</strong></td>' + pinnedBundles.map(function (p) { return '<td>' + (pair[1] === 'kind' ? p.kind : moneyR(p[pair[1]] || 0)) + '</td>'; }).join('') + '</tr>'; });
     html += '</tbody></table><p class="muted">Pinned bundles are a snapshot of the picks at pin time; change a flight/hotel pick and re-pin to update a comparison.</p>';
     document.getElementById('exactCompareTable').innerHTML = html;
   }
   document.getElementById('bestValueBtn').addEventListener('click', function () { var bv = bestValuePicks(); selFlight = bv.flight; selHotel = bv.hotel; renderFlights(); renderHotels(); renderBundles(); });
+  var epSel = document.getElementById('exactParkSelect'); if (epSel) epSel.addEventListener('change', renderBundles);
+  var epDays = document.getElementById('exactParkDays'); if (epDays) epDays.addEventListener('change', renderBundles);
+  window.__voRenderExact = renderBundles;
   renderFlights(); renderHotels(); renderBundles();
 })();
 </script>
@@ -529,6 +605,36 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
       });
     }
   } catch (e) { /* PWA registration is optional; never break the app */ }
+})();
+</script>
+<script>
+// Cruise / theme-park gating: a component only shows when its checkbox is on.
+// Toggling either box re-renders the exact bundles and, if estimate results are
+// already on screen, re-runs the estimate search so no stale cruise/parks totals remain.
+(function () {
+  function el(id) { return document.getElementById(id); }
+  function updateVisibility() {
+    var cruiseOn = !!(el('useCruise') && el('useCruise').checked);
+    var parksOn = !!(el('useParks') && el('useParks').checked);
+    if (el('cruiseOptions')) el('cruiseOptions').style.display = cruiseOn ? 'block' : 'none';
+    if (el('parkControls')) el('parkControls').style.display = parksOn ? 'block' : 'none';
+    if (el('exactCruiseNote')) el('exactCruiseNote').style.display = cruiseOn ? 'block' : 'none';
+    if (el('exactParkControls')) el('exactParkControls').style.display = parksOn ? 'block' : 'none';
+    var dest = (el('destination') ? el('destination').value : '').toLowerCase();
+    var relevant = dest.indexOf('orlando') !== -1 || dest.indexOf('anaheim') !== -1 || dest === 'florida';
+    if (el('parkSuggestion')) el('parkSuggestion').style.display = (relevant && !parksOn) ? 'block' : 'none';
+  }
+  function refresh() {
+    updateVisibility();
+    if (window.__voRenderExact) window.__voRenderExact();
+    if (el('results') && el('results').innerHTML.trim()) {
+      var form = el('tripForm'); if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+  }
+  ['useCruise', 'useParks'].forEach(function (id) { var c = el(id); if (c) c.addEventListener('change', refresh); });
+  var destEl = el('destination'); if (destEl) destEl.addEventListener('input', updateVisibility);
+  document.querySelectorAll('.preset-btn').forEach(function (b) { b.addEventListener('click', function () { setTimeout(updateVisibility, 0); }); });
+  updateVisibility();
 })();
 </script>
 </body>

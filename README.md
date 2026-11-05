@@ -117,6 +117,11 @@ Each placeholder currently returns `null`, which tells the app to fall back to e
 
 ## Changelog
 
+### v3.1 (2026-11-04) — Cruise gating fix + theme parks (not pushed)
+- **Cruise gating fix:** cruise is now unchecked by default and completely hidden when unchecked — no cruise column, cruise bundle, cruise note, or cruise amount in any estimate total, breakdown, compare table, calendar total, or exact bundle. Checking cruise restores it exactly as before, still labeled as an estimate (no cruise connector). The same rule applies to every component: it only contributes to a total when its checkbox is on.
+- **Theme parks (estimate only):** new “Theme parks” checkbox with Walt Disney World (Orlando, $165 1-day adult), Disneyland (California, $160), Universal Orlando ($140), Universal Hollywood ($130), Legoland Florida ($110), SeaWorld Orlando ($105); children at 90% of adult. Park days 1–7 (default = trip length, capped at 7); multi-day per person = 1-day price × days^0.75, so average price per day falls as days rise. No theme-park ticket API connector exists, so prices are labeled estimates — check the park's official site for exact ticket prices. New bundles when checked: Flight + Hotel + Theme Parks, and Flight + Hotel + Theme Parks + Cruise (only when both are checked), pinnable in compare like other bundles. Orlando/Anaheim/Florida presets show a theme-park suggestion without forcing it on; Caribbean/Mexico/Alaska/Europe presets do not suggest parks.
+- v3 exact flights/hotels, PWA, price calendar, filters, and compare-up-to-3 are unchanged.
+
 ### v3 (2026-11-04) — Exact options and bundles
 Exact options section with a real SLC → Cancun demo dataset (Duffel flights, Expedia hotels, searched 2026-11-04), five bundles with recalculating totals and per-person totals, pin-up-to-3 bundle comparison, Best value definition (cheapest flight + highest-review hotel ≤ $350), cruise kept as a labeled estimate with no exact price invented, service-worker cache bumped to v3, and an architecture note documenting the backend/proxy step still needed for live prices. Nothing booked, no payment wallet used. **Not pushed to GitHub — pushing is left to the parent agent. Do NOT push `data/` (raw search outputs, ~2.8 MB, and Expedia result URLs contain session parameters).**
 
