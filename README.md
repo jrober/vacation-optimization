@@ -2,6 +2,30 @@
 
 A single-page, self-contained prototype that helps a user find the **cheapest time to travel** when combining flight + hotel + cruise.
 
+## New in v3 — Exact options and bundles (demo dataset)
+
+- **Exact options mode:** a new "Exact options — SLC → Cancun demo" section in `index.html`, for one real searched trip: Salt Lake City (SLC) → Cancun (CUN), depart 2027-01-27, return 2027-02-03, 7 nights, 2 adults, economy. It shows real flight options and real hotel options side by side, each with exact airline / times / stops / room / total — not a single blended estimate.
+  - Flights (Duffel, searched 2026-11-04, coverage complete, 2,339 offers scanned): Southwest $1,096.74 (08:40 → 19:45 out, 17:20 → 11:45+1 back, 4 stops total), Southwest $1,096.74 (07:30 outbound variant), Aeromexico $1,380.54, Delta $1,389.54 (1 stop total), Delta nonstop $2,288.54.
+  - Hotels (Expedia guest search, searched 2026-11-04, 50 hotels returned, sorted by total including mandatory taxes and fees; hotel results via Expedia): Hotel Hacienda de Castilla $270.47 (3.0★, review 7.4), Hotel Colonial Cancun $292.07 (3.0★, 7.6), Suites Cancun Center Cancun $296.37 (2.5★, 7.4), Terracaribe $311.84 (3.0★, 7.8), Hotel Los Girasoles Cancun $339.29 (3.0★, 8.8).
+- **Bundles:** Flight only, Hotel only, Flight + Hotel, Flight + Hotel + Cruise (cruise estimate, labeled), and Best value. Each bundle shows its breakdown and per-person total. Pick a different flight or hotel with the radio buttons and every bundle total recalculates. Pin up to 3 bundles to compare them side by side.
+  - Cheapest Flight + Hotel bundle: $1,096.74 + $270.47 = **$1,367.21 total, $683.61 per person**.
+  - Cheapest Flight + Hotel + Cruise bundle: $1,096.74 + $270.47 + $1,689.60 cruise estimate + $135.17 cruise tax = **$3,191.98 total, $1,595.99 per person**.
+  - Best value bundle (definition fixed in the app): cheapest flight + the highest guest-review hotel with a total of $350 or less in this Expedia result set = Southwest $1,096.74 + Hotel Los Girasoles Cancun $339.29 = **$1,436.03 total**.
+  - Bundle math rule: hotel totals from Expedia already include mandatory taxes and fees, and flight totals are the Duffel totals, so no extra tax is added to those lines. The old v2 10% bundle discount is **not** applied to exact offers — it was an estimate, not a real offer.
+- **Cruise stays an estimate / link-out:** there is no cruise connector and no usable public cruise-price API. Expedia Cruises is a website search, and commercial cruise APIs (Widgety, Cruise Itinerary, Travelopro) need a key or contract. No cruise price is presented as exact in v3. The app says to search Expedia Cruises or a cruise line site directly for the same dates.
+- **Snapshot, not live:** the demo flight/hotel prices are from the 2026-11-04 searches above and will change. Re-check before booking. Nothing in the app is booked and no payment is taken.
+- PWA intact: manifest, service worker (cache bumped to `vacation-optimizer-v3`), iOS tags, mobile layout. All v2 features kept: price calendar, filters/sorting, compare up to 3 windows, destination presets, price watch.
+
+## Architecture — why the live app cannot yet show live prices, and what is needed
+
+A static page on GitHub Pages cannot call Duffel or Expedia directly in the browser: those APIs need a server-side secret key, and a key shipped in public page code would be exposed to anyone who loads the page, and browser CORS rules block direct calls from a static origin. That is why v3's in-app data model is structured for exact offers (`DEMO_EXACT` flights/hotels + `buildBundle()` in `index.html`), with a real demo dataset embedded so the bundle UI is demonstrable today — but the demo data is **not** live data.
+
+The documented backend step still needed before the live app shows live prices:
+1. Run a small server (or serverless function) that holds the Duffel and Expedia keys in environment variables — never in the repo or page code.
+2. That server exposes one endpoint, e.g. `GET /api/offers?origin=SLC&destination=CUN&depart=2027-01-27&return=2027-02-03&adults=2`, which calls Duffel Offers and the Expedia lodging search, normalises each offer to the `DEMO_EXACT` shape (airline, outbound/return times, stops, total; hotel name, stars, review score, room, total including taxes and fees), and returns JSON.
+3. The app then fetches that endpoint instead of using `DEMO_EXACT`, keeping the same bundle math and UI. Cruise needs a separate commercial cruise API key/contract added to that same server before it can be exact; until then it stays an estimate with a link-out.
+4. Cache the server response briefly (minutes, not days) and show the search timestamp in the app, because flight/hotel prices change and a stale exact price is worse than a labeled estimate.
+
 ## What it does
 
 - User enters: destination (or a preset), earliest/latest departure, trip length in nights, adults, children, home airport (optional), max budget (optional), and toggles for flight, hotel, and cruise.
@@ -49,7 +73,7 @@ GitHub Pages cannot be enabled from the app code or from an agent — the reposi
 
 ### What the PWA includes
 - `manifest.webmanifest` — name "Vacation Optimizer", short_name "Vacation", `display: standalone`, theme/background `#0f172a`, `start_url`/`scope` `./`, icons 192 and 512 (plus a 512 maskable variant).
-- `sw.js` — service worker caching the app shell (`index.html`, manifest, icons) for offline use, with a versioned cache (`vacation-optimizer-v1`) that purges old caches on activate. It only handles same-origin GET requests and never caches API responses or keys.
+- `sw.js` — service worker caching the app shell (`index.html`, manifest, icons) for offline use, with a versioned cache (`vacation-optimizer-v3` as of v3) that purges old caches on activate. It only handles same-origin GET requests and never caches API responses or keys.
 - iOS head tags — `apple-mobile-web-app-capable`, status bar style `black-translucent`, title "Vacation", `apple-touch-icon` (180×180), `viewport-fit=cover`, `theme-color`.
 - Registration in `index.html` is guarded: it only runs over `http:`/`https:` and only if service workers are supported, so opening the file locally still works (just without offline caching or installability).
 - Mobile-first polish — safe-area insets (`env(safe-area-inset-*)`) on header/main, a sticky bottom-anchored search button on small screens, inputs at 16px+ so iOS does not zoom on focus, single-column layout under 850px, and results/compare tables in horizontally scrollable wrappers instead of being clipped.
@@ -92,6 +116,10 @@ Each placeholder currently returns `null`, which tells the app to fall back to e
 2. In production, do **not** ship API keys in client-side code — use a server proxy / environment variables, and keep keys out of the repository.
 
 ## Changelog
+
+### v3 (2026-11-04) — Exact options and bundles
+Exact options section with a real SLC → Cancun demo dataset (Duffel flights, Expedia hotels, searched 2026-11-04), five bundles with recalculating totals and per-person totals, pin-up-to-3 bundle comparison, Best value definition (cheapest flight + highest-review hotel ≤ $350), cruise kept as a labeled estimate with no exact price invented, service-worker cache bumped to v3, and an architecture note documenting the backend/proxy step still needed for live prices. Nothing booked, no payment wallet used. **Not pushed to GitHub — pushing is left to the parent agent. Do NOT push `data/` (raw search outputs, ~2.8 MB, and Expedia result URLs contain session parameters).**
+
 
 ### PWA (2026-11-04) — v2 → installable iPhone app
 `manifest.webmanifest`, `sw.js` app-shell offline cache, iOS head tags + 180/192/512 (+512 maskable) PNG icons generated locally with PIL, in-app "Install on iPhone" card (Share → Add to Home Screen, https required), safe-area insets, sticky search button on small screens, 16px+ inputs, scrollable results/compare tables. All v2 features unchanged: price calendar, ±3 days, filters/sorting, compare up to 3, bundle pricing, presets, price watches, live-API placeholders. Not pushed to GitHub — pushing is left to the parent agent. GitHub Pages must be enabled by the repo owner (Settings → Pages → Deploy from branch main, root).
@@ -143,5 +171,6 @@ console.log('no NaN?', sorted.every(r=> Number.isFinite(r.total)));
 
 - Estimates only until APIs are connected — do not book on these numbers.
 - Cruise + hotel are summed as selected; a real cruise already includes a cabin, so a future version may offer a "cruise replaces hotel nights" mode.
+- v3 exact data covers only SLC → Cancun, Jan 27–Feb 3, 2027, 2 adults, as a snapshot from 2026-11-04. Other routes/dates still use the estimate engine until the backend step above is built.
 - No baggage, transfers, or cabin-category modelling yet.
 - Price watch is local to one browser (localStorage); it does not notify you of price changes.

@@ -2,7 +2,7 @@
    Bump CACHE_NAME when the shell changes so old caches are purged.
    This caches only the local app shell (same-origin, static files). It does
    not cache live API responses, and it never stores API keys. */
-const CACHE_NAME = 'vacation-optimizer-v1';
+const CACHE_NAME = 'vacation-optimizer-v3';
 const APP_SHELL = [
   './',
   './index.html',
