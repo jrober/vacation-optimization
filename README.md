@@ -30,6 +30,33 @@ A single-page, self-contained prototype that helps a user find the **cheapest ti
 - **Compare:** run a search, click **Pin** on up to 3 rows. A comparison table appears below the calendar. Click Pin again on a pinned row to unpin it. Trying to pin a 4th window shows a “Compare is full” message and does not add it.
 - **Price watch:** after filling in a trip, click **Save this search (price watch)**. Saved searches appear under the form on your next visit (same browser). Click **Re-run** to load that search and run it again, or **Delete** to remove it. Nothing is sent to a server.
 
+## Installable iPhone app (PWA) — no App Store needed
+
+This is a Progressive Web App. It can be added to an iPhone Home Screen and opened full-screen, like a native app, with no developer account and no App Store review.
+
+### Install on iPhone
+1. Host the app on an **https://** site first (GitHub Pages below is the simplest — the raw `index.html` file opened locally will **not** install, and Safari will not offer Add to Home Screen for `file://` pages).
+2. On your iPhone, open the hosted URL in **Safari** (not an in-app browser).
+3. Tap **Share** (square with an arrow pointing up) → scroll down → **Add to Home Screen** → **Add**.
+4. Open it from the new **Vacation** icon on your Home Screen. The in-app install card repeats these steps, and shows a "running the installed app" note when opened standalone.
+
+### Host it on GitHub Pages (repo owner must enable this)
+GitHub Pages cannot be enabled from the app code or from an agent — the repository owner enables it:
+1. In the GitHub repo, go to **Settings → Pages**.
+2. Under **Build and deployment**, choose **Deploy from a branch**, branch **main**, folder **/ (root)**.
+3. Save. GitHub will publish the site at an `https://<owner>.github.io/<repo>/` URL (it can take a minute or two on first deploy).
+4. Open that URL in Safari on the iPhone and follow the install steps above.
+
+### What the PWA includes
+- `manifest.webmanifest` — name "Vacation Optimizer", short_name "Vacation", `display: standalone`, theme/background `#0f172a`, `start_url`/`scope` `./`, icons 192 and 512 (plus a 512 maskable variant).
+- `sw.js` — service worker caching the app shell (`index.html`, manifest, icons) for offline use, with a versioned cache (`vacation-optimizer-v1`) that purges old caches on activate. It only handles same-origin GET requests and never caches API responses or keys.
+- iOS head tags — `apple-mobile-web-app-capable`, status bar style `black-translucent`, title "Vacation", `apple-touch-icon` (180×180), `viewport-fit=cover`, `theme-color`.
+- Registration in `index.html` is guarded: it only runs over `http:`/`https:` and only if service workers are supported, so opening the file locally still works (just without offline caching or installability).
+- Mobile-first polish — safe-area insets (`env(safe-area-inset-*)`) on header/main, a sticky bottom-anchored search button on small screens, inputs at 16px+ so iOS does not zoom on focus, single-column layout under 850px, and results/compare tables in horizontally scrollable wrappers instead of being clipped.
+
+### Offline behavior
+Once installed (or visited once over https), the app shell loads offline. Saved searches (localStorage) and all v2 features still work offline, because pricing is computed locally. Live API calls, if wired in later, would still need a connection — the service worker deliberately does not cache them.
+
 ## How to run it
 
 No build step, no server needed:
@@ -38,7 +65,7 @@ No build step, no server needed:
 2. Fill in the trip form. The defaults are a useful sample: Caribbean, Jan 1–31, 2027, 7 nights, 2 adults, flight + hotel + cruise on.
 3. Press **Find cheapest windows**.
 
-That's it — vanilla HTML/CSS/JS only, no external libraries.
+That's it — vanilla HTML/CSS/JS only, no external libraries. Note: running it this way is fine for testing, but it will **not** be installable — for Add to Home Screen, host it over https (GitHub Pages above).
 
 ## How the estimate works
 
@@ -65,6 +92,9 @@ Each placeholder currently returns `null`, which tells the app to fall back to e
 2. In production, do **not** ship API keys in client-side code — use a server proxy / environment variables, and keep keys out of the repository.
 
 ## Changelog
+
+### PWA (2026-11-04) — v2 → installable iPhone app
+`manifest.webmanifest`, `sw.js` app-shell offline cache, iOS head tags + 180/192/512 (+512 maskable) PNG icons generated locally with PIL, in-app "Install on iPhone" card (Share → Add to Home Screen, https required), safe-area insets, sticky search button on small screens, 16px+ inputs, scrollable results/compare tables. All v2 features unchanged: price calendar, ±3 days, filters/sorting, compare up to 3, bundle pricing, presets, price watches, live-API placeholders. Not pushed to GitHub — pushing is left to the parent agent. GitHub Pages must be enabled by the repo owner (Settings → Pages → Deploy from branch main, root).
 
 ### v2 (2026-11-04)
 Price calendar heatmap, ±3-day flexible dates, cheapest-month summary, sort (total / per person / best value), filters (budget, stars, cruise length, hide weekends, direct-only), bundle discount line, compare up to 3, book-now-or-wait quartile indicator, price watch via localStorage, destination presets, sticky summary, mobile touch targets, taxes/fees line, empty state. Total formula changed to flight + hotel + cruise + taxes − bundle discount.

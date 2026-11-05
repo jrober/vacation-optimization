@@ -2,17 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vacation">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <title>Vacation Optimizer — Cheapest Time to Go</title>
 <style>
   :root { --bg:#0f172a; --card:#ffffff; --accent:#0ea5a4; --accent2:#f59e0b; --text:#1e293b; --muted:#64748b; --green:#16a34a; --yellow:#eab308; --red:#dc2626; }
   * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f1f5f9; color:var(--text); }
-  header { background:var(--bg); color:#fff; padding:28px 20px; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f1f5f9; color:var(--text); overflow-x:hidden; padding-bottom:env(safe-area-inset-bottom); }
+  header { background:var(--bg); color:#fff; padding:28px 20px; padding-top:calc(28px + env(safe-area-inset-top)); padding-left:calc(20px + env(safe-area-inset-left)); padding-right:calc(20px + env(safe-area-inset-right)); }
+  /* Mobile-first: no horizontal scroll at 375px, inputs >=16px so iOS does not zoom on focus */
+  @media (max-width: 600px) {
+    main { padding-left:12px; padding-right:12px; }
+    .card { padding:14px 12px; }
+    .cal-cell { min-height:52px; font-size:12px; padding:4px 2px; }
+    .cal-cell small { font-size:10px; }
+    table { font-size:13px; }
+    /* Bottom-anchored primary search button on small screens */
+    button.primary { position:sticky; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:20; box-shadow:0 4px 16px rgba(0,0,0,.25); }
+  }
   header h1 { margin:0 0 6px; font-size:28px; }
   header p { margin:0; color:#cbd5e1; max-width:820px; }
   .notice { background:#fef3c7; border:1px solid #fcd34d; padding:12px 14px; border-radius:10px; margin:16px auto; max-width:1120px; font-size:14px; }
-  main { max-width:1120px; margin:0 auto; padding:0 16px 48px; }
+  main { max-width:1120px; margin:0 auto; padding:0 16px calc(48px + env(safe-area-inset-bottom)); padding-left:calc(16px + env(safe-area-inset-left)); padding-right:calc(16px + env(safe-area-inset-right)); }
   .grid { display:grid; grid-template-columns: 1fr 1.7fr; gap:16px; }
   @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } header h1 { font-size:24px; } }
   .card { background:var(--card); border-radius:14px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
@@ -62,6 +81,18 @@
 
 <main>
   <div class="notice"><strong>Estimates only — not live prices.</strong> All prices below are deterministic estimates for comparison, until real APIs are connected in the “Live prices” section. Do not book on these numbers alone. The “book now or wait” indicator is a quartile comparison inside your own window, <strong>not</strong> a real price prediction.</div>
+
+  <section class="card" id="installCard" style="margin-bottom:16px">
+    <h2 style="margin-top:0">📱 Install on iPhone</h2>
+    <p class="muted" style="margin-bottom:8px">This app is installable — no App Store needed. Once installed it opens full-screen from your Home Screen and works offline for the app itself (prices are still estimates).</p>
+    <ol style="margin:8px 0; padding-left:20px; line-height:1.6">
+      <li>Open this app in <strong>Safari</strong> on your iPhone, from an <strong>https://</strong> site (for example GitHub Pages — see the README). Opening the raw <code>index.html</code> file will <strong>not</strong> install.</li>
+      <li>Tap the <strong>Share</strong> button (the square with an arrow pointing up) in Safari's toolbar.</li>
+      <li>Scroll down and tap <strong>Add to Home Screen</strong>, then tap <strong>Add</strong> in the top-right.</li>
+      <li>Open it from the new <strong>Vacation</strong> icon on your Home Screen.</li>
+    </ol>
+    <p class="muted" id="installStatus">Tip: if you do not see “Add to Home Screen”, make sure you are in Safari (not an in-app browser) and on an https:// page.</p>
+  </section>
 
   <div class="grid">
     <section class="card">
@@ -380,6 +411,22 @@ if (typeof document !== 'undefined' && document.getElementById) {
   renderSaved();
 }
 if (typeof module !== 'undefined' && module.exports) { module.exports = { generateResults, computeWindow, priceFlight, priceHotel, priceCruise, hashString, seededRandom, calendarCells, addPin, cheapestMonthSummary, bookIndicator, PRESETS }; }
+</script>
+<script>
+// PWA: register the service worker only when served over http(s).
+// Opening index.html as a file:// page skips registration so nothing breaks.
+(function () {
+  try {
+    var statusEl = document.getElementById('installStatus');
+    var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (standalone && statusEl) statusEl.textContent = 'You are running the installed app — welcome back.';
+    if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () { /* offline cache is optional; app still works */ });
+      });
+    }
+  } catch (e) { /* PWA registration is optional; never break the app */ }
+})();
 </script>
 </body>
 </html>
