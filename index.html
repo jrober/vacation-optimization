@@ -13,37 +13,39 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <title>Vacation Optimizer — Cheapest Time to Go</title>
 <style>
-  :root { --bg:#0f172a; --card:#ffffff; --accent:#0ea5a4; --accent2:#f59e0b; --text:#1e293b; --muted:#64748b; --green:#16a34a; --yellow:#eab308; --red:#dc2626; }
+  :root { --bg:#0f172a; --card:#ffffff; --accent:#0ea5a4; --accent-dark:#0b8f8e; --text:#1e293b; --muted:#64748b; --line:#e2e8f0; --soft:#f6f7f9; --green:#16a34a; --yellow:#eab308; --red:#dc2626; }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust:100%; }
-  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f1f5f9; color:var(--text); overflow-x:hidden; padding-bottom:env(safe-area-inset-bottom); }
-  header { background:var(--bg); color:#fff; padding:28px 20px; padding-top:calc(28px + env(safe-area-inset-top)); padding-left:calc(20px + env(safe-area-inset-left)); padding-right:calc(20px + env(safe-area-inset-right)); }
-  /* Mobile-first: no horizontal scroll at 375px, inputs >=16px so iOS does not zoom on focus */
-  @media (max-width: 600px) {
-    main { padding-left:12px; padding-right:12px; }
-    .card { padding:14px 12px; }
-    .cal-cell { min-height:52px; font-size:12px; padding:4px 2px; }
-    .cal-cell small { font-size:10px; }
-    table { font-size:13px; }
-    /* Bottom-anchored primary search button on small screens */
-    button.primary { position:sticky; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:20; box-shadow:0 4px 16px rgba(0,0,0,.25); }
-  }
-  header h1 { margin:0 0 6px; font-size:28px; }
-  header p { margin:0; color:#cbd5e1; max-width:820px; }
-  .notice { background:#fef3c7; border:1px solid #fcd34d; padding:12px 14px; border-radius:10px; margin:16px auto; max-width:1120px; font-size:14px; }
-  main { max-width:1120px; margin:0 auto; padding:0 16px calc(48px + env(safe-area-inset-bottom)); padding-left:calc(16px + env(safe-area-inset-left)); padding-right:calc(16px + env(safe-area-inset-right)); }
-  .grid { display:grid; grid-template-columns: 1fr 1.7fr; gap:16px; }
-  @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } header h1 { font-size:24px; } }
-  .card { background:var(--card); border-radius:14px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--soft); color:var(--text); overflow-x:hidden; padding-bottom:env(safe-area-inset-bottom); line-height:1.5; }
+  header { background:var(--bg); color:#fff; padding:22px 20px; padding-top:calc(22px + env(safe-area-inset-top)); padding-left:calc(20px + env(safe-area-inset-left)); padding-right:calc(20px + env(safe-area-inset-right)); }
+  header h1 { margin:0 0 4px; font-size:26px; }
+  header p { margin:0; color:#cbd5e1; max-width:820px; font-size:15px; }
+  main { max-width:720px; margin:0 auto; padding:16px 16px calc(110px + env(safe-area-inset-bottom)); padding-left:calc(16px + env(safe-area-inset-left)); padding-right:calc(16px + env(safe-area-inset-right)); }
+  .card { background:var(--card); border-radius:16px; padding:18px; box-shadow:0 2px 12px rgba(15,23,42,.07); margin-bottom:16px; }
+  h2 { margin:0 0 10px; font-size:20px; } h3 { margin:18px 0 8px; font-size:16px; }
   label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
-  input[type=text], input[type=date], input[type=number], input[type=password], select { width:100%; padding:12px 10px; border:1px solid #cbd5e1; border-radius:10px; font-size:16px; min-height:48px; }
+  input[type=text], input[type=date], input[type=number], input[type=password], select { width:100%; padding:12px 10px; border:1px solid #cbd5e1; border-radius:10px; font-size:16px; min-height:48px; background:#fff; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  @media (max-width: 600px) { .row { grid-template-columns:1fr; } }
   .checks label { display:inline-block; margin-right:14px; font-weight:500; }
-  .preset-btn, .pin-btn, .small-btn { background:#e2e8f0; color:#0f172a; border:0; padding:10px 12px; border-radius:999px; font-size:14px; font-weight:600; cursor:pointer; min-height:44px; width:auto; margin:4px 4px 0 0; }
-  .preset-btn.active { background:var(--accent); color:#fff; }
-  button.primary { background:var(--accent); color:#fff; border:0; padding:14px 18px; border-radius:10px; font-size:17px; font-weight:700; cursor:pointer; margin-top:16px; width:100%; min-height:52px; }
-  button.primary:hover { filter:brightness(1.05); }
+  .chip, .preset-btn, .pin-btn, .small-btn { background:#eef2f7; color:#0f172a; border:0; padding:10px 14px; border-radius:999px; font-size:14px; font-weight:600; cursor:pointer; min-height:44px; margin:4px 4px 0 0; }
+  .preset-btn.active, .chip.active { background:var(--accent); color:#fff; }
+  button.primary { background:var(--accent); color:#fff; border:0; padding:14px 18px; border-radius:12px; font-size:17px; font-weight:700; cursor:pointer; margin-top:16px; width:100%; min-height:52px; }
+  .hero { background:var(--bg); color:#fff; border-radius:16px; padding:20px; box-shadow:0 4px 20px rgba(15,23,42,.18); margin-bottom:16px; }
+  .hero .total { font-size:38px; font-weight:800; line-height:1.1; margin:6px 0 2px; }
+  .hero .pp { color:#a7f3d0; font-weight:700; }
+  .hero .muted { color:#cbd5e1; }
+  .hero h2 { color:#fff; }
+  .bundle-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+  .bundle-card { border:1px solid var(--line); border-radius:14px; padding:14px; background:#fff; }
+  .bundle-card strong { font-size:16px; }
+  .bundle-card .total { font-size:22px; font-weight:800; margin-top:6px; }
+  .text-btn { background:none; border:0; color:var(--accent-dark); font-weight:700; font-size:14px; cursor:pointer; padding:10px 4px; min-height:44px; }
+  .sticky-total { position:fixed; left:0; right:0; bottom:0; z-index:20; background:#0f172a; color:#fff; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .sticky-total strong { font-size:20px; }
+  details.advanced { background:#fff; border-radius:16px; padding:16px 18px; box-shadow:0 2px 12px rgba(15,23,42,.07); }
+  details.advanced > summary { font-weight:700; font-size:16px; cursor:pointer; padding:6px 0; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:8px 0 4px; }
+  footer details { text-align:left; background:#fff; border-radius:12px; padding:12px 14px; }
   .sticky { position:sticky; top:0; z-index:10; background:#0f172a; color:#fff; border-radius:12px; padding:12px 14px; margin-bottom:12px; }
   .sticky strong { font-size:20px; }
   .table-wrap { overflow-x:auto; }
@@ -52,14 +54,10 @@
   th { color:var(--muted); font-size:12px; text-transform:uppercase; }
   td .total-big { font-size:18px; font-weight:800; display:block; }
   td .breakdown { font-size:12px; color:var(--muted); }
-  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; }
-  .under { background:#dcfce7; color:#166534; } .over { background:#fee2e2; color:#991b1b; }
   .chart { display:flex; align-items:flex-end; gap:3px; height:180px; margin-top:12px; overflow-x:auto; padding-bottom:6px; }
   .bar { flex:1 0 14px; background:var(--accent); border-radius:4px 4px 0 0; min-width:14px; position:relative; }
   .bar.cheapest { background:var(--green); } .bar.expensive { background:var(--red); opacity:.7; }
   .bar span { display:none; }
-  .bar:hover span { display:block; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:4px 6px; border-radius:6px; font-size:11px; white-space:nowrap; z-index:2; }
-  .cal-month { margin-bottom:16px; }
   .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
   .cal-cell { min-height:48px; border-radius:8px; padding:6px 4px; font-size:13px; border:1px solid #e2e8f0; cursor:pointer; text-align:left; background:#fff; }
   .cal-cell.cheap { background:#dcfce7; } .cal-cell.typical { background:#fef9c3; } .cal-cell.expensive { background:#fee2e2; }
@@ -68,68 +66,72 @@
   .cal-head { font-size:12px; font-weight:700; color:var(--muted); text-align:center; padding:4px 0; }
   .muted { color:var(--muted); font-size:13px; }
   .empty { background:#fff7ed; border:1px solid #fdba74; border-radius:12px; padding:16px; }
-  code { background:#f1f5f9; padding:1px 5px; border-radius:4px; }
-  details { margin-top:10px; }
   .saved-item { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:6px 0; }
+  @media (max-width: 600px) {
+    main { padding-left:12px; padding-right:12px; }
+    .card { padding:14px 12px; }
+    .row { grid-template-columns:1fr; }
+    .cal-cell { min-height:52px; font-size:12px; padding:4px 2px; }
+    table { font-size:13px; }
+    button.primary { position:static; }
+    header h1 { font-size:24px; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>✈️ Vacation Optimizer</h1>
-  <p>Start with exact bundles: pick a named airline and a named hotel below. Every bundle names its flight and its hotel. Cruise and theme parks only count when you check them. Below that, an estimate engine covers destinations with no exact data yet. We compare every possible departure date in that window, add up flight + hotel — plus cruise or theme parks only when you check them — and rank the cheapest trips first — total cost first, breakdown second.</p>
+  <h1>Vacation Optimizer</h1>
+  <p>Exact flights + hotels, Jan 27 – Feb 3, 2027. Pick a destination, then a bundle.</p>
 </header>
 
 <main>
-  <div class="notice"><strong>New in v3 — Exact options (demo dataset).</strong> Below the estimate results there is an “Exact options” section with real flight and hotel offers found on 2026-11-04 for SLC → Cancun, Jan 27–Feb 3, 2027, 2 adults. Those are a snapshot, not live prices — re-check before booking. Everything else in the estimate results is still an estimate. <strong>Estimates only — not live prices.</strong> All prices below are deterministic estimates for comparison, until real APIs are connected in the “Live prices” section. Do not book on these numbers alone. The “book now or wait” indicator is a quartile comparison inside your own window, <strong>not</strong> a real price prediction.</div>
-
-  <section class="card" id="installCard" style="margin-bottom:16px">
-    <h2 style="margin-top:0">📱 Install on iPhone</h2>
-    <p class="muted" style="margin-bottom:8px">This app is installable — no App Store needed. Once installed it opens full-screen from your Home Screen and works offline for the app itself (prices are still estimates).</p>
-    <ol style="margin:8px 0; padding-left:20px; line-height:1.6">
-      <li>Open this app in <strong>Safari</strong> on your iPhone, from an <strong>https://</strong> site (for example GitHub Pages — see the README). Opening the raw <code>index.html</code> file will <strong>not</strong> install.</li>
-      <li>Tap the <strong>Share</strong> button (the square with an arrow pointing up) in Safari's toolbar.</li>
-      <li>Scroll down and tap <strong>Add to Home Screen</strong>, then tap <strong>Add</strong> in the top-right.</li>
-      <li>Open it from the new <strong>Vacation</strong> icon on your Home Screen.</li>
-    </ol>
-    <p class="muted" id="installStatus">Tip: if you do not see “Add to Home Screen”, make sure you are in Safari (not an in-app browser) and on an https:// page.</p>
-  </section>
-
-<section class="card" style="margin-top:16px" id="exactSection">
-    <h2>Exact bundles — named airline + named hotel</h2>
-    <p class="muted">Every bundle below names its airline (with flight numbers, times and stops) and its hotel (with stars, guest review and room). No bundle shows a total without naming both. Pick a different flight or hotel and every bundle total recalculates.</p>
-    <p><strong>Exact destination:</strong> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="cancun">Cancun</button> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="orlando">Orlando</button> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="honolulu">Honolulu</button></p>
-    <p id="exactRoute"></p>
-    <p class="muted" id="exactSource"></p>
-    <p class="checks"><label><input id="exactUseCruise" type="checkbox"> Cruise (estimate only)</label> <label><input id="exactUseParks" type="checkbox"> Theme parks (estimate only)</label> <span class="muted">Unchecked = not shown and not counted in any exact bundle.</span></p>
-    <p class="muted" id="exactCruiseNote" style="display:none"><strong>Cruise is still an estimate, not an exact offer.</strong> There is no cruise connector and no usable public cruise-price API: Expedia Cruises is a website search, and commercial cruise APIs (for example Widgety, Cruise Itinerary, Travelopro) need a key or contract. So the cruise line in bundles below uses the v2 estimate ($1,689.60 + 8% tax = $1,824.77) and is labeled as such. To get an exact cruise price, search Expedia Cruises or a cruise line site directly for the same dates.</p>
-    <h3>Pick a flight</h3>
-    <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Airline</th><th>Outbound</th><th>Return</th><th>Stops (total)</th><th>Travel time</th><th>Total (2 adults)</th></tr></thead><tbody id="exactFlights"></tbody></table></div>
-    <h3>Pick a hotel</h3>
-    <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Hotel</th><th>Stars</th><th>Guest review</th><th>Room</th><th>Total incl. taxes &amp; fees (7 nights)</th></tr></thead><tbody id="exactHotels"></tbody></table></div>
-    <div id="exactParkControls" style="display:none">
-      <h3>Theme parks (estimate)</h3>
-      <p class="muted">Theme parks are off unless you check “Theme parks” here or in Your trip below. When on, pick a park and days here — totals below recalculate. Prices are estimates only; check the park's official site for exact ticket prices.</p>
+<section class="card" id="primaryFlow">
+    <h2>Your trip</h2>
+    <p><strong>Where to?</strong></p>
+    <p><button type="button" class="preset-btn exact-dest-btn" data-exact-dest="cancun">Cancun</button> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="orlando">Orlando</button> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="honolulu">Honolulu</button></p>
+    <p><strong>When?</strong> <span id="primaryDates">Jan 27 – Feb 3, 2027 · 7 nights</span><br><span class="muted">Exact dates are fixed to the exact dataset — other dates are estimates in Advanced below.</span></p>
+    <p><strong>Who?</strong> 2 adults <span class="muted">(exact prices are for 2 adults)</span></p>
+    <p><strong>Include</strong></p>
+    <p class="checks"><label><input id="useFlight" type="checkbox" checked> Flight</label> <label><input id="useHotel" type="checkbox" checked> Hotel</label> <label><input id="useCruise" type="checkbox"> Cruise</label> <label><input id="useParks" type="checkbox"> Theme parks</label></p>
+    <div id="parkControls" style="display:none">
       <div class="row">
-        <div><label for="exactParkSelect">Theme park</label><select id="exactParkSelect"><option value="wdw">Walt Disney World (Orlando)</option><option value="disneyland">Disneyland (California)</option><option value="universalOrlando">Universal Orlando</option><option value="universalHollywood">Universal Hollywood</option><option value="legolandFlorida">Legoland Florida</option><option value="seaworldOrlando">SeaWorld Orlando</option></select></div>
-        <div><label for="exactParkDays">Park days (1–7)</label><input id="exactParkDays" type="number" min="1" max="7" value="7"></div>
+        <div><label for="parkSelect">Theme park</label><select id="parkSelect"><option value="wdw">Walt Disney World (Orlando)</option><option value="disneyland">Disneyland (California)</option><option value="universalOrlando">Universal Orlando</option><option value="universalHollywood">Universal Hollywood</option><option value="legolandFlorida">Legoland Florida</option><option value="seaworldOrlando">SeaWorld Orlando</option></select></div>
+        <div><label for="parkDays">Park days (1–7)</label><input id="parkDays" type="number" min="1" max="7" value="7"></div>
       </div>
+      <p class="muted">Theme parks: estimate — check the park's official site for exact prices.</p>
     </div>
-    <h3>Bundles — pick a flight and hotel above and the totals recalculate</h3>
-    <p class="muted">Bundle totals = flight + hotel + (cruise estimate + 8% cruise tax only when cruise is checked) + (theme park tickets only when theme parks are checked). Hotel totals from Expedia already include mandatory taxes and fees, and flight totals are the Duffel totals, so no extra tax is added to those two lines. The old v2 10% bundle discount is <strong>not</strong> applied to exact offers — it was an estimate, not a real offer. Per person = bundle total ÷ 2 adults.</p>
-    <div class="table-wrap"><table><thead id="exactBundlesHead"></thead><tbody id="exactBundles"></tbody></table></div>
-    <p><button type="button" id="bestValueBtn" class="small-btn">Apply Best value picks</button> <span class="muted" id="bestValueNote">Best value = cheapest flight + the highest guest-review hotel with a total of $350 or less in this Expedia result set (Hotel Los Girasoles Cancun, 8.8, $339.29). That definition is fixed in the app, not a claim about all hotels.</span></p>
-    <div id="exactCompareWrap" style="display:none">
-      <h3>Compare bundles — up to 3 pinned</h3>
-      <div class="table-wrap" id="exactCompareTable"></div>
-    </div>
-    <p class="muted" id="exactNote">Demo dataset only. For any other route or dates, the app falls back to the estimate engine above — exact offers for other routes need the backend step described in the README (a small server calling Duffel and Expedia and returning JSON to this page).</p>
+    <p class="muted" id="exactCruiseNote" style="display:none">Cruise: estimate.</p>
   </section>
 
+<section class="card" id="exactSection">
+    <div id="hero"></div>
+    <p class="muted" id="exactSource"></p>
+    <p><button type="button" class="text-btn" id="changeFlightBtn">Change flight ▾</button> <button type="button" class="text-btn" id="changeHotelBtn">Change hotel ▾</button> <button type="button" id="bestValueBtn" class="small-btn">Best value picks</button></p>
+    <div id="flightPicker" style="display:none">
+      <h3>Pick a flight</h3>
+      <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Airline</th><th>Outbound</th><th>Return</th><th>Stops (total)</th><th>Travel time</th><th>Total (2 adults)</th></tr></thead><tbody id="exactFlights"></tbody></table></div>
+    </div>
+    <div id="hotelPicker" style="display:none">
+      <h3>Pick a hotel</h3>
+      <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Hotel</th><th>Stars</th><th>Guest review</th><th>Room</th><th>Total incl. taxes &amp; fees (7 nights)</th></tr></thead><tbody id="exactHotels"></tbody></table></div>
+    </div>
+    <h3>More bundles</h3>
+    <div id="exactBundles" class="bundle-grid"></div>
+    <p class="muted" id="bestValueNote"></p>
+    <div id="exactCompareWrap" style="display:none">
+      <h3>Compare</h3>
+      <div id="exactCompareTable" class="bundle-grid"></div>
+    </div>
+    <p class="muted">Flights/hotels: exact from Duffel/Expedia, Jan 27–Feb 3, 2027. Cruise: estimate. Theme parks: estimate.</p>
+  </section>
+  <div id="stickyTotalBar" class="sticky-total" style="display:none"></div>
 
+
+  <details class="advanced" id="advanced"><summary>Advanced — estimates, price calendar, filters &amp; price watch</summary>
   <div class="grid">
     <section class="card">
-      <h2>Your trip</h2>
-      <p class="muted">Destination presets — each preset uses different base prices, so results actually change:</p>
+      <h2>Advanced trip search</h2>
+      <p class="muted">Presets change the estimate prices.</p>
       <div id="presets">
         <button type="button" class="preset-btn" data-preset="Caribbean">Caribbean</button>
         <button type="button" class="preset-btn" data-preset="Mexico">Mexico</button>
@@ -158,20 +160,7 @@
         </div>
         <label for="homeAirport">Home airport (optional)</label>
         <input id="homeAirport" type="text" placeholder="e.g. SLC">
-        <label>Include</label>
-        <div class="checks">
-          <label><input id="useFlight" type="checkbox" checked> Flight</label>
-          <label><input id="useHotel" type="checkbox" checked> Hotel</label>
-          <label><input id="useCruise" type="checkbox"> Cruise</label>
-          <label><input id="useParks" type="checkbox"> Theme parks</label>
-        </div>
-        <div id="parkControls" style="display:none">
-          <div class="row">
-            <div><label for="parkSelect">Theme park (estimate — see official site for exact prices)</label><select id="parkSelect"><option value="wdw">Walt Disney World (Orlando)</option><option value="disneyland">Disneyland (California)</option><option value="universalOrlando">Universal Orlando</option><option value="universalHollywood">Universal Hollywood</option><option value="legolandFlorida">Legoland Florida</option><option value="seaworldOrlando">SeaWorld Orlando</option></select></div>
-            <div><label for="parkDays">Park days (1–7)</label><input id="parkDays" type="number" min="1" max="7" value="7"></div>
-          </div>
-          <p class="muted">Theme park prices are estimates only — there is no theme-park ticket API connector. Multi-day ticket per person = 1-day price × days<sup>0.75</sup>, so the average price per day falls as days rise. Children at 90% of the adult price. Check the park's official site for exact ticket prices.</p>
-        </div>
+        <p class="muted">Flight / hotel / cruise / theme parks toggles are in Your trip above — they apply here too.</p>
         <div class="row">
           <div><label for="stars">Hotel stars</label><select id="stars"><option value="3">3 stars</option><option value="4" selected>4 stars</option><option value="5">5 stars</option></select></div>
           <div><label for="sortBy">Sort by</label><select id="sortBy"><option value="total">Cheapest total</option><option value="perPerson">Cheapest per person</option><option value="value">Best value</option></select></div>
@@ -185,7 +174,6 @@
           </div></div>
         </div>
         <button type="submit" class="primary">Find cheapest windows</button>
-        <p class="muted">Best value = total ÷ (1 + 0.08 × weekend nights in the trip). A trip covering more weekend nights scores better, because those are days you do not need to take off work. Weekend departures are usually pricier in this model.</p>
         <button type="button" id="saveSearchBtn" class="small-btn">Save this search (price watch)</button>
         <button type="button" id="clearFiltersBtn" class="small-btn">Clear filters</button>
       </form>
@@ -219,7 +207,7 @@
 
     <section class="card" style="margin-top:16px">
     <h2>Live prices — how to plug in real APIs later</h2>
-    <p class="muted">This prototype deliberately does <strong>not</strong> call live APIs and does not store keys in code. To go live, fill in the fields below (they stay in your browser only, in this page session) and implement the placeholder functions in the page source. Until then, estimates are used.</p>
+    <p class="muted">Keys stay in this page session only and are not saved. Live fetch functions are placeholders until wired to a server proxy.</p>
     <div class="row">
       <div><label for="duffelKey">Duffel API key (flights)</label><input id="duffelKey" type="password" placeholder="Duffel key — never hardcode"></div>
       <div><label for="hotelKey">Hotel API key</label><input id="hotelKey" type="password" placeholder="Hotel provider key"></div>
@@ -250,6 +238,12 @@
       <li><strong>Book now or wait (estimate only):</strong> bottom quartile of totals in your window = “Low vs typical”, middle = “Typical”, top quartile = “High vs typical”. This is a comparison inside your window, <strong>not</strong> a real price prediction.</li>
     </ul>
   </section>
+  </details>
+  <footer>
+    <details><summary>Install on iPhone</summary>
+      <p>Open this app in Safari from an https:// site, tap Share, then Add to Home Screen, then Add. Open it from the Vacation icon.</p>
+    </details>
+  </footer>
 </main>
 
 <script>
@@ -474,7 +468,7 @@ if (typeof document !== 'undefined' && document.getElementById) {
     renderCompare(); showSelected(cheapest.departure);
   }
   document.getElementById('tripForm').addEventListener('submit', function (e) { e.preventDefault(); runSearch(); });
-  document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => { document.getElementById('destination').value = b.getAttribute('data-preset'); document.querySelectorAll('.preset-btn').forEach(x => x.classList.toggle('active', x === b)); }));
+  document.querySelectorAll('.preset-btn').forEach(b => { const pr = b.getAttribute('data-preset'); if (!pr) return; b.addEventListener('click', () => { document.getElementById('destination').value = pr; document.querySelectorAll('.preset-btn').forEach(x => x.classList.toggle('active', x === b)); }); });
   document.getElementById('saveSearchBtn').addEventListener('click', () => { const o = readOpts(); let saved = []; try { saved = JSON.parse(localStorage.getItem('vo_saved_searches') || '[]'); } catch (e) {} saved.push({ destination: o.destination, earliest: o.earliest, latest: o.latest, nights: o.nights, adults: o.adults }); try { localStorage.setItem('vo_saved_searches', JSON.stringify(saved)); } catch (e) {} renderSaved(); });
   document.getElementById('clearFiltersBtn').addEventListener('click', () => { document.getElementById('budget').value = ''; document.getElementById('cruiseLength').value = 'Any'; document.getElementById('hideWeekends').checked = false; document.getElementById('flex3').checked = false; document.getElementById('directOnly').checked = false; document.getElementById('sortBy').value = 'total'; });
   const liveBtn = document.getElementById('liveCheckBtn');
@@ -584,8 +578,9 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
   function money2(n) { return '$' + Math.round(n * 100) / 100; }
   function moneyR(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
   function renderExactHeader() {
+    var pd = document.getElementById('primaryDates'); if (pd) pd.textContent = DEMO_EXACT.departure + ' → ' + DEMO_EXACT.returnDate + ' · ' + DEMO_EXACT.nights + ' nights';
     var r = document.getElementById('exactRoute'); if (r) r.innerHTML = '<strong>Route:</strong> ' + DEMO_EXACT.origin + ' → ' + DEMO_EXACT.destination + ' (' + DEMO_EXACT.route + '), <strong>depart ' + DEMO_EXACT.departure + ', return ' + DEMO_EXACT.returnDate + '</strong>, ' + DEMO_EXACT.nights + ' nights, ' + DEMO_EXACT.adults + ' adults, economy. Searched ' + DEMO_EXACT.searchedOn + '.';
-    var s = document.getElementById('exactSource'); if (s) s.textContent = 'Flights: ' + DEMO_EXACT.flightSource + '. Hotels: ' + DEMO_EXACT.hotelSource + '. Prices are a snapshot from that search and will change — re-check before booking. Nothing here is booked, and no payment is taken in this app.';
+    var s = document.getElementById('exactSource'); if (s) s.textContent = 'Flights: Duffel · Hotels: Expedia · ' + DEMO_EXACT.route + ', ' + DEMO_EXACT.departure + ' → ' + DEMO_EXACT.returnDate + ' · Snapshot — re-check before booking.';
     var bv = document.getElementById('bestValueNote'); if (bv) { var picks = bestValuePicks(); bv.textContent = 'Best value = cheapest flight + the highest guest-review hotel in this exact list: ' + picks.flight.airline + ' (' + moneyR(picks.flight.total) + ') + ' + picks.hotel.name + ' (' + picks.hotel.reviewScore + ', ' + moneyR(picks.hotel.total) + '). That definition is fixed in the app, not a claim about all hotels.'; }
     document.querySelectorAll('.exact-dest-btn').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-exact-dest') === DEMO_EXACT.key); });
   }
@@ -612,7 +607,7 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
   function exactCruiseEnabled() { var el = document.getElementById('useCruise'); return !!(el && el.checked); }
   function exactParksAmount() {
     if (!exactParksEnabled()) return 0;
-    var sel = document.getElementById('exactParkSelect'); var daysEl = document.getElementById('exactParkDays');
+    var sel = document.getElementById('parkSelect'); var daysEl = document.getElementById('parkDays');
     var days = daysEl ? (parseInt(daysEl.value, 10) || 7) : 7;
     var info = priceParks(sel ? sel.value : 'wdw', days, DEMO_EXACT.adults, 0);
     return info.total;
@@ -623,32 +618,56 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
     return rows;
   }
   function renderBundles() {
-    var rows = bundleRows();
+    var allRows = bundleRows();
+    var flightOn = !document.getElementById('useFlight') || document.getElementById('useFlight').checked;
+    var hotelOn = !document.getElementById('useHotel') || document.getElementById('useHotel').checked;
+    var rows = allRows.filter(function (r) { if (!flightOn && r.flight) return false; if (!hotelOn && r.hotel) return false; if (!flightOn && !hotelOn) return false; return true; });
+    if (!rows.length) { document.getElementById('hero').innerHTML = '<div class="hero"><h2>Cheapest bundle</h2><p>Check Flight or Hotel above to see a bundle.</p></div>'; document.getElementById('exactBundles').innerHTML = ''; var bar0 = document.getElementById('stickyTotalBar'); if (bar0) bar0.style.display = 'none'; return; }
+    var hero = rows.find(function (r) { return r.kind === 'Flight + Hotel'; }) || rows[0];
+    var heroIdx = rows.indexOf(hero);
     var showCruise = exactCruiseEnabled(), showParks = exactParksEnabled();
-    document.getElementById('exactBundlesHead').innerHTML = '<tr><th>Bundle</th><th>Flight</th><th>Hotel</th>' + (showCruise ? '<th>Cruise (est.)</th>' : '') + (showParks ? '<th>Theme parks (est.)</th>' : '') + '<th>Total</th><th>Per person</th><th>Pin</th></tr>';
-    document.getElementById('exactBundles').innerHTML = rows.map(function (b, i) {
-      var cruiseCell = b.cruise ? moneyR(b.cruise) + ' est. + ' + moneyR(b.cruiseTax) + ' tax' : '—';
-      var detail = b.kind === 'Best value' ? ('<br><span class="muted">' + (b.flightLabel || '') + ' · ' + (b.hotelLabel || '') + '</span>') : ('<br><span class="muted">' + selFlight.airline + ' · ' + selHotel.name + '</span>');
-      return '<tr><td><strong>' + b.kind + '</strong>' + detail + '</td><td>' + (b.flight ? moneyR(b.flight) : '—') + '</td><td>' + (b.hotel ? moneyR(b.hotel) : '—') + '</td>' + (showCruise ? '<td>' + cruiseCell + '</td>' : '') + (showParks ? '<td>' + (b.parks ? moneyR(b.parks) : '—') + '</td>' : '') + '<td><strong>' + moneyR(b.total) + '</strong></td><td>' + moneyR(b.perPerson) + '</td><td><button type="button" class="pin-btn" data-bundle-pin="' + i + '">Pin</button></td></tr>';
-    }).join('');
-    document.querySelectorAll('[data-bundle-pin]').forEach(function (btn) { btn.addEventListener('click', function () { var b = rows[parseInt(btn.getAttribute('data-bundle-pin'), 10)]; if (!b) return; var key = b.kind + '|' + Math.round(b.total); if (pinnedBundles.some(function (p) { return p.key === key; })) { pinnedBundles = pinnedBundles.filter(function (p) { return p.key !== key; }); } else if (pinnedBundles.length < 3) { pinnedBundles.push(Object.assign({ key: key }, b)); } renderBundleCompare(); }); });
+    function breakdown(b) {
+      var parts = [];
+      if (b.flight) parts.push('Flight ' + moneyR(b.flight));
+      if (b.hotel) parts.push('Hotel ' + moneyR(b.hotel));
+      if (b.cruise) parts.push('Cruise (est.) ' + moneyR(b.cruise) + ' + ' + moneyR(b.cruiseTax) + ' tax');
+      if (b.parks) parts.push('Theme parks (est.) ' + moneyR(b.parks));
+      return parts.join(' · ');
+    }
+    function namesFor(b) {
+      if (b.kind === 'Best value') { var bv = bestValuePicks(); return bv.flight.airline + ' · ' + bv.hotel.name; }
+      var f = (b.flight ? selFlight.airline : 'No flight'), h = (b.hotel ? selHotel.name : 'No hotel');
+      return (b.kind === 'Flight only') ? f : (b.kind === 'Hotel only' ? h : f + ' · ' + h);
+    }
+    function card(b, i) {
+      return '<div class="bundle-card"><strong>' + b.kind + '</strong><br><span class="muted">' + namesFor(b) + '</span><div class="total">' + moneyR(b.total) + '</div><span class="muted">' + moneyR(b.perPerson) + ' per person · ' + breakdown(b) + '</span><br><button type="button" class="pin-btn" data-bundle-pin="' + i + '">Compare</button></div>';
+    }
+    var heroDetail = '';
+    if (hero.kind === 'Best value') { var bv2 = bestValuePicks(); heroDetail = bv2.flight.airline + ' — ' + bv2.flight.outbound + ' · return ' + bv2.flight.returnTrip + '<br>' + bv2.hotel.name + ' — ' + bv2.hotel.stars + '★, ' + bv2.hotel.reviewScore + ' (' + bv2.hotel.reviewCount + ' reviews), ' + bv2.hotel.room; }
+    else heroDetail = (hero.flight ? selFlight.airline + ' — ' + selFlight.outbound + ' · return ' + selFlight.returnTrip : 'No flight') + '<br>' + (hero.hotel ? selHotel.name + ' — ' + selHotel.stars + '★, ' + selHotel.reviewScore + ' (' + selHotel.reviewCount + ' reviews), ' + selHotel.room : 'No hotel');
+    document.getElementById('hero').innerHTML = '<div class="hero"><h2>Cheapest bundle</h2><div class="total">' + moneyR(hero.total) + '</div><div class="pp">' + moneyR(hero.perPerson) + ' per person</div><p>' + heroDetail + '</p><p class="muted">' + breakdown(hero) + '</p><button type="button" class="pin-btn" data-bundle-pin="' + heroIdx + '">Compare</button></div>';
+    document.getElementById('exactBundles').innerHTML = rows.filter(function (r, i) { return i !== heroIdx; }).map(function (b) { return card(b, rows.indexOf(b)); }).join('');
+    var bar = document.getElementById('stickyTotalBar');
+    if (bar) { bar.style.display = 'flex'; bar.innerHTML = '<span>' + DEMO_EXACT.label + ' · Cheapest bundle</span><strong>' + moneyR(hero.total) + '</strong>'; }
+    document.querySelectorAll('[data-bundle-pin]').forEach(function (btn) { btn.addEventListener('click', function () { var b = rows[parseInt(btn.getAttribute('data-bundle-pin'), 10)]; if (!b) return; var key = b.kind + '|' + Math.round(b.total); if (pinnedBundles.some(function (p) { return p.key === key; })) { pinnedBundles = pinnedBundles.filter(function (p) { return p.key !== key; }); } else if (pinnedBundles.length < 3) { pinnedBundles.push(Object.assign({ key: key, flightLabel: namesFor(b), flightName: b.kind === 'Best value' ? bestValuePicks().flight.airline : (b.flight ? selFlight.airline : ''), hotelName: b.kind === 'Best value' ? bestValuePicks().hotel.name : (b.hotel ? selHotel.name : '') }, b)); } renderBundleCompare(); }); });
   }
   function renderBundleCompare() {
     var wrap = document.getElementById('exactCompareWrap'); if (!pinnedBundles.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
-    var labels = [['Bundle', 'kind'], ['Flight', 'flight'], ['Hotel', 'hotel']];
-    if (exactCruiseEnabled()) labels.push(['Cruise (est.)', 'cruise'], ['Cruise tax (est.)', 'cruiseTax']);
-    if (exactParksEnabled()) labels.push(['Theme parks (est.)', 'parks']);
-    labels.push(['Total', 'total'], ['Per person', 'perPerson']);
-    var html = '<table><thead><tr><th></th>' + pinnedBundles.map(function (p) { return '<th>' + p.kind + '</th>'; }).join('') + '</tr></thead><tbody>';
-    labels.forEach(function (pair) { html += '<tr><td><strong>' + pair[0] + '</strong></td>' + pinnedBundles.map(function (p) { return '<td>' + (pair[1] === 'kind' ? p.kind : moneyR(p[pair[1]] || 0)) + '</td>'; }).join('') + '</tr>'; });
-    html += '</tbody></table><p class="muted">Pinned bundles are a snapshot of the picks at pin time; change a flight/hotel pick and re-pin to update a comparison.</p>';
-    document.getElementById('exactCompareTable').innerHTML = html;
+    document.getElementById('exactCompareTable').innerHTML = pinnedBundles.map(function (p) {
+      var parts = [];
+      if (p.flight) parts.push('Flight ' + moneyR(p.flight));
+      if (p.hotel) parts.push('Hotel ' + moneyR(p.hotel));
+      if (p.cruise) parts.push('Cruise (est.) ' + moneyR(p.cruise) + ' + ' + moneyR(p.cruiseTax) + ' tax');
+      if (p.parks) parts.push('Theme parks (est.) ' + moneyR(p.parks));
+      return '<div class="bundle-card"><strong>' + p.kind + '</strong><br><span class="muted">' + (p.flightName || '') + (p.flightName && p.hotelName ? ' · ' : '') + (p.hotelName || '') + '</span><div class="total">' + moneyR(p.total) + '</div><span class="muted">' + moneyR(p.perPerson) + ' per person · ' + parts.join(' · ') + '</span></div>';
+    }).join('');
   }
   document.getElementById('bestValueBtn').addEventListener('click', function () { var bv = bestValuePicks(); selFlight = bv.flight; selHotel = bv.hotel; renderFlights(); renderHotels(); renderBundles(); });
-  [['exactUseCruise', 'useCruise'], ['exactUseParks', 'useParks']].forEach(function (pair) { var ex = document.getElementById(pair[0]); if (!ex) return; ex.addEventListener('change', function () { var main = document.getElementById(pair[1]); if (main) { main.checked = ex.checked; main.dispatchEvent(new Event('change', { bubbles: true })); } renderBundles(); }); });
-  var epSel = document.getElementById('exactParkSelect'); if (epSel) epSel.addEventListener('change', renderBundles);
-  var epDays = document.getElementById('exactParkDays'); if (epDays) epDays.addEventListener('change', renderBundles);
+  var epSel = document.getElementById('parkSelect'); if (epSel) epSel.addEventListener('change', renderBundles);
+  var epDays = document.getElementById('parkDays'); if (epDays) epDays.addEventListener('change', renderBundles);
+  var cfBtn = document.getElementById('changeFlightBtn'); if (cfBtn) cfBtn.addEventListener('click', function () { var el = document.getElementById('flightPicker'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; });
+  var chBtn = document.getElementById('changeHotelBtn'); if (chBtn) chBtn.addEventListener('click', function () { var el = document.getElementById('hotelPicker'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; });
   window.__voRenderExact = renderBundles;
   renderExactHeader(); renderFlights(); renderHotels(); renderBundles();
 })();
@@ -681,9 +700,6 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
     if (el('cruiseOptions')) el('cruiseOptions').style.display = cruiseOn ? 'block' : 'none';
     if (el('parkControls')) el('parkControls').style.display = parksOn ? 'block' : 'none';
     if (el('exactCruiseNote')) el('exactCruiseNote').style.display = cruiseOn ? 'block' : 'none';
-    if (el('exactParkControls')) el('exactParkControls').style.display = parksOn ? 'block' : 'none';
-    if (el('exactUseCruise')) el('exactUseCruise').checked = cruiseOn;
-    if (el('exactUseParks')) el('exactUseParks').checked = parksOn;
     var dest = (el('destination') ? el('destination').value : '').toLowerCase();
     var relevant = dest.indexOf('orlando') !== -1 || dest.indexOf('anaheim') !== -1 || dest === 'florida';
     if (el('parkSuggestion')) el('parkSuggestion').style.display = (relevant && !parksOn) ? 'block' : 'none';
@@ -695,7 +711,7 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
       var form = el('tripForm'); if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
     }
   }
-  ['useCruise', 'useParks'].forEach(function (id) { var c = el(id); if (c) c.addEventListener('change', refresh); });
+  ['useCruise', 'useParks', 'useFlight', 'useHotel'].forEach(function (id) { var c = el(id); if (c) c.addEventListener('change', refresh); });
   var destEl = el('destination'); if (destEl) destEl.addEventListener('input', updateVisibility);
   document.querySelectorAll('.preset-btn').forEach(function (b) { b.addEventListener('click', function () { setTimeout(updateVisibility, 0); }); });
   updateVisibility();
