@@ -2,6 +2,26 @@
 
 A single-page, self-contained prototype that helps a user find the **cheapest time to travel** when combining flight + hotel + cruise.
 
+## New in v4 — Exact bundles are the main flow (not pushed)
+
+Exact named airline + named hotel bundles are now the **first section in the app**, before the estimate engine. The estimate engine is moved below it and labeled "Estimate only — use when your destination has no exact data yet", and estimate totals are never mixed into an exact bundle. The price calendar is also labeled estimate-only.
+
+- **Exact destination selector:** Cancun, Orlando, Honolulu. Switching it swaps the exact flight list, hotel list, bundles, best-value pick, and route/source lines. All three are SLC origin, 2 adults, economy, depart 2027-01-27, return 2027-02-03, 7 nights.
+  - **Cancun (searched 2026-11-04):** Duffel, coverage complete, 2,339 offers; Expedia, 50 hotels. Cheapest Flight + Hotel: **Southwest Airlines $1,096.74** (08:40 → 19:45 out, WN3980/WN1450/WN0307; 17:20 → 11:45+1 back, WN0306/WN1852/WN0971; 4 stops total) + **Hotel Hacienda de Castilla $270.47** (3.0★, 7.4, Standard Room 2 Double Beds) = **$1,367.21 total, $683.61 per person**.
+  - **Orlando (searched 2026-11-05):** Duffel, coverage complete, 2,445 offers; Expedia, 50 hotels. Cheapest Flight + Hotel: **Frontier Airlines $539.96** (07:40 → 16:21 out, F93862/F93312; 19:20 → 00:04+1 back, F92519/F94251; 2 stops total) + **Rodeway Inn Kissimmee Maingate West $413.98** (2.0★, 6.8, Room 1 Double Bed) = **$953.94 total, $476.97 per person**.
+  - **Honolulu (searched 2026-11-05):** Duffel, coverage complete, 1,606 offers; Expedia, 50 hotels. Cheapest Flight + Hotel (private room): **Southwest Airlines $1,010.22** (06:50 → 18:55 out, WN0949/WN3373/WN2022; 23:20 → 11:10+1 back, WN1773/WN3612; 3 stops total) + **Ewa Hotel Waikiki $976.52** (2.0★, 7.6, Room 1-Moderate) = **$1,986.74 total, $993.37 per person**. Note: the cheapest Honolulu hotel overall is Bposhtels Waikiki Retreat at $684.95, but it is a shared dormitory (women only), not a private room for 2, so it is listed last in the app and is not the default bundle hotel. With it, the total would be $1,695.17 — do not use that as a 2-adult private-room bundle.
+- **Every bundle names both sides:** each bundle row shows the selected airline + flight numbers + times + stops and the selected hotel + stars + guest review + room, plus total and per-person total. No bundle shows a total without naming its flight and hotel. Pick a different flight (5 options per destination) or hotel (5 options per destination) with the radio buttons and every bundle total recalculates by exactly the price difference.
+- **Best value (new definition):** cheapest flight + the highest guest-review hotel in that destination's exact list. Cancun: Southwest $1,096.74 + Hotel Los Girasoles Cancun (8.8, $339.29) = $1,436.03. Orlando: Frontier $539.96 + Ramada by Wyndham Kissimmee Gateway (8.2, $535.04) = $1,075.00. Honolulu: Southwest $1,010.22 + Ramada Plaza by Wyndham Waikiki (8.6, $1,052.49) = $2,062.71.
+- **Cruise and theme parks stay gated:** cruise and theme-park checkboxes now also sit inside the exact section (synced with the trip form below), and both are still completely hidden / counted as $0 when unchecked. Cruise is an estimate, theme parks are estimates — neither is presented as exact.
+- **PWA:** service-worker cache bumped to `vacation-optimizer-v4`.
+- **Snapshot, not live:** all exact prices are from the searches above and will change. Re-check before booking. Nothing is booked and no payment is taken.
+
+### How to add a new exact destination
+1. Run a Duffel search for the new route on the same pattern (origin, destination, depart/return dates, 2 adults, economy, `--limit 300`) and an Expedia guest search for the destination city on the same check-in/check-out dates (`--room 2 --sort-type totalpricewithfees`). Save the raw outputs under `data/` — do **not** push `data/` (raw outputs are ~1–2 MB each and Expedia result URLs contain session parameters).
+2. Pick at least 3 flights (cheapest per airline is a good default) and at least 3 hotels (cheapest private rooms first; list any shared-dormitory result last with a clear note, never as the default bundle hotel). Copy the exact airline, flight numbers, times, stops total, duration, total; and hotel name, stars, review score/count, room, total including taxes and fees, refundable flag.
+3. Add a new entry to `EXACT_DATA` in `index.html` in the same shape as `cancun`/`orlando`/`honolulu` (key, label, route, origin, destination, departure, returnDate, nights, adults, searchedOn, flightSource, hotelSource, cruiseEstimate, cruiseTaxRate, flights[], hotels[]), add a destination button with `data-exact-dest="<key>"` in the exact section, and bump the service-worker cache in `sw.js`. The picker, bundles, best-value pick, and per-person math then work without further code changes.
+4. For live any-destination search (not a snapshot), build the backend step in "Architecture" below instead of hand-adding datasets.
+
 ## New in v3 — Exact options and bundles (demo dataset)
 
 - **Exact options mode:** a new "Exact options — SLC → Cancun demo" section in `index.html`, for one real searched trip: Salt Lake City (SLC) → Cancun (CUN), depart 2027-01-27, return 2027-02-03, 7 nights, 2 adults, economy. It shows real flight options and real hotel options side by side, each with exact airline / times / stops / room / total — not a single blended estimate.
@@ -18,12 +38,12 @@ A single-page, self-contained prototype that helps a user find the **cheapest ti
 
 ## Architecture — why the live app cannot yet show live prices, and what is needed
 
-A static page on GitHub Pages cannot call Duffel or Expedia directly in the browser: those APIs need a server-side secret key, and a key shipped in public page code would be exposed to anyone who loads the page, and browser CORS rules block direct calls from a static origin. That is why v3's in-app data model is structured for exact offers (`DEMO_EXACT` flights/hotels + `buildBundle()` in `index.html`), with a real demo dataset embedded so the bundle UI is demonstrable today — but the demo data is **not** live data.
+A static page on GitHub Pages cannot call Duffel or Expedia directly in the browser: those APIs need a server-side secret key, and a key shipped in public page code would be exposed to anyone who loads the page, and browser CORS rules block direct calls from a static origin. That is why v3's in-app data model is structured for exact offers (`EXACT_DATA` flights/hotels + `buildBundle()` in `index.html`), with a real demo dataset embedded so the bundle UI is demonstrable today — but the demo data is **not** live data.
 
 The documented backend step still needed before the live app shows live prices:
 1. Run a small server (or serverless function) that holds the Duffel and Expedia keys in environment variables — never in the repo or page code.
-2. That server exposes one endpoint, e.g. `GET /api/offers?origin=SLC&destination=CUN&depart=2027-01-27&return=2027-02-03&adults=2`, which calls Duffel Offers and the Expedia lodging search, normalises each offer to the `DEMO_EXACT` shape (airline, outbound/return times, stops, total; hotel name, stars, review score, room, total including taxes and fees), and returns JSON.
-3. The app then fetches that endpoint instead of using `DEMO_EXACT`, keeping the same bundle math and UI. Cruise needs a separate commercial cruise API key/contract added to that same server before it can be exact; until then it stays an estimate with a link-out.
+2. That server exposes one endpoint, e.g. `GET /api/offers?origin=SLC&destination=CUN&depart=2027-01-27&return=2027-02-03&adults=2`, which calls Duffel Offers and the Expedia lodging search, normalises each offer to the `EXACT_DATA` shape (airline, outbound/return times, stops, total; hotel name, stars, review score, room, total including taxes and fees), and returns JSON.
+3. The app then fetches that endpoint instead of using `EXACT_DATA`, keeping the same bundle math and UI. Cruise needs a separate commercial cruise API key/contract added to that same server before it can be exact; until then it stays an estimate with a link-out.
 4. Cache the server response briefly (minutes, not days) and show the search timestamp in the app, because flight/hotel prices change and a stale exact price is worse than a labeled estimate.
 
 ## What it does
@@ -117,6 +137,9 @@ Each placeholder currently returns `null`, which tells the app to fall back to e
 
 ## Changelog
 
+### v4 (2026-11-05) — Exact bundles first (not pushed)
+Exact bundles moved to the top of the app, estimate engine moved below and labeled estimate-only, exact destination selector (Cancun / Orlando / Honolulu) with 5 flights and 5 hotels each, every bundle row naming its airline and hotel, best value redefined as cheapest flight + highest guest-review hotel in the exact list, cruise/theme-park toggles added inside the exact section (synced, still gated), service-worker cache bumped to v4. New live searches only (no bookings): Duffel SLC → MCO and SLC → HNL, Expedia Orlando and Honolulu, all Jan 27–Feb 3, 2027, 2 adults. Honolulu default bundle uses the cheapest private room (Ewa Hotel), not the cheaper shared dormitory. Not pushed to GitHub — pushing is left to the parent agent. Do NOT push `data/`.
+
 ### v3.1 (2026-11-04) — Cruise gating fix + theme parks (not pushed)
 - **Cruise gating fix:** cruise is now unchecked by default and completely hidden when unchecked — no cruise column, cruise bundle, cruise note, or cruise amount in any estimate total, breakdown, compare table, calendar total, or exact bundle. Checking cruise restores it exactly as before, still labeled as an estimate (no cruise connector). The same rule applies to every component: it only contributes to a total when its checkbox is on.
 - **Theme parks (estimate only):** new “Theme parks” checkbox with Walt Disney World (Orlando, $165 1-day adult), Disneyland (California, $160), Universal Orlando ($140), Universal Hollywood ($130), Legoland Florida ($110), SeaWorld Orlando ($105); children at 90% of adult. Park days 1–7 (default = trip length, capped at 7); multi-day per person = 1-day price × days^0.75, so average price per day falls as days rise. No theme-park ticket API connector exists, so prices are labeled estimates — check the park's official site for exact ticket prices. New bundles when checked: Flight + Hotel + Theme Parks, and Flight + Hotel + Theme Parks + Cruise (only when both are checked), pinnable in compare like other bundles. Orlando/Anaheim/Florida presets show a theme-park suggestion without forcing it on; Caribbean/Mexico/Alaska/Europe presets do not suggest parks.
@@ -176,6 +199,6 @@ console.log('no NaN?', sorted.every(r=> Number.isFinite(r.total)));
 
 - Estimates only until APIs are connected — do not book on these numbers.
 - Cruise + hotel are summed as selected; a real cruise already includes a cabin, so a future version may offer a "cruise replaces hotel nights" mode.
-- v3 exact data covers only SLC → Cancun, Jan 27–Feb 3, 2027, 2 adults, as a snapshot from 2026-11-04. Other routes/dates still use the estimate engine until the backend step above is built.
+- v4 exact data covers only SLC → Cancun (2026-11-04), Orlando (2026-11-05), and Honolulu (2026-11-05), Jan 27–Feb 3, 2027, 2 adults, as snapshots. Other routes/dates still use the estimate engine until the backend step above is built.
 - No baggage, transfers, or cabin-category modelling yet.
 - Price watch is local to one browser (localStorage); it does not notify you of price changes.

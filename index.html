@@ -76,7 +76,7 @@
 <body>
 <header>
   <h1>✈️ Vacation Optimizer</h1>
-  <p>Enter a destination and a flexible window. We compare every possible departure date in that window, add up flight + hotel — plus cruise or theme parks only when you check them — and rank the cheapest trips first — total cost first, breakdown second.</p>
+  <p>Start with exact bundles: pick a named airline and a named hotel below. Every bundle names its flight and its hotel. Cruise and theme parks only count when you check them. Below that, an estimate engine covers destinations with no exact data yet. We compare every possible departure date in that window, add up flight + hotel — plus cruise or theme parks only when you check them — and rank the cheapest trips first — total cost first, breakdown second.</p>
 </header>
 
 <main>
@@ -93,6 +93,38 @@
     </ol>
     <p class="muted" id="installStatus">Tip: if you do not see “Add to Home Screen”, make sure you are in Safari (not an in-app browser) and on an https:// page.</p>
   </section>
+
+<section class="card" style="margin-top:16px" id="exactSection">
+    <h2>Exact bundles — named airline + named hotel</h2>
+    <p class="muted">Every bundle below names its airline (with flight numbers, times and stops) and its hotel (with stars, guest review and room). No bundle shows a total without naming both. Pick a different flight or hotel and every bundle total recalculates.</p>
+    <p><strong>Exact destination:</strong> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="cancun">Cancun</button> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="orlando">Orlando</button> <button type="button" class="preset-btn exact-dest-btn" data-exact-dest="honolulu">Honolulu</button></p>
+    <p id="exactRoute"></p>
+    <p class="muted" id="exactSource"></p>
+    <p class="checks"><label><input id="exactUseCruise" type="checkbox"> Cruise (estimate only)</label> <label><input id="exactUseParks" type="checkbox"> Theme parks (estimate only)</label> <span class="muted">Unchecked = not shown and not counted in any exact bundle.</span></p>
+    <p class="muted" id="exactCruiseNote" style="display:none"><strong>Cruise is still an estimate, not an exact offer.</strong> There is no cruise connector and no usable public cruise-price API: Expedia Cruises is a website search, and commercial cruise APIs (for example Widgety, Cruise Itinerary, Travelopro) need a key or contract. So the cruise line in bundles below uses the v2 estimate ($1,689.60 + 8% tax = $1,824.77) and is labeled as such. To get an exact cruise price, search Expedia Cruises or a cruise line site directly for the same dates.</p>
+    <h3>Pick a flight</h3>
+    <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Airline</th><th>Outbound</th><th>Return</th><th>Stops (total)</th><th>Travel time</th><th>Total (2 adults)</th></tr></thead><tbody id="exactFlights"></tbody></table></div>
+    <h3>Pick a hotel</h3>
+    <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Hotel</th><th>Stars</th><th>Guest review</th><th>Room</th><th>Total incl. taxes &amp; fees (7 nights)</th></tr></thead><tbody id="exactHotels"></tbody></table></div>
+    <div id="exactParkControls" style="display:none">
+      <h3>Theme parks (estimate)</h3>
+      <p class="muted">Theme parks are off unless you check “Theme parks” here or in Your trip below. When on, pick a park and days here — totals below recalculate. Prices are estimates only; check the park's official site for exact ticket prices.</p>
+      <div class="row">
+        <div><label for="exactParkSelect">Theme park</label><select id="exactParkSelect"><option value="wdw">Walt Disney World (Orlando)</option><option value="disneyland">Disneyland (California)</option><option value="universalOrlando">Universal Orlando</option><option value="universalHollywood">Universal Hollywood</option><option value="legolandFlorida">Legoland Florida</option><option value="seaworldOrlando">SeaWorld Orlando</option></select></div>
+        <div><label for="exactParkDays">Park days (1–7)</label><input id="exactParkDays" type="number" min="1" max="7" value="7"></div>
+      </div>
+    </div>
+    <h3>Bundles — pick a flight and hotel above and the totals recalculate</h3>
+    <p class="muted">Bundle totals = flight + hotel + (cruise estimate + 8% cruise tax only when cruise is checked) + (theme park tickets only when theme parks are checked). Hotel totals from Expedia already include mandatory taxes and fees, and flight totals are the Duffel totals, so no extra tax is added to those two lines. The old v2 10% bundle discount is <strong>not</strong> applied to exact offers — it was an estimate, not a real offer. Per person = bundle total ÷ 2 adults.</p>
+    <div class="table-wrap"><table><thead id="exactBundlesHead"></thead><tbody id="exactBundles"></tbody></table></div>
+    <p><button type="button" id="bestValueBtn" class="small-btn">Apply Best value picks</button> <span class="muted" id="bestValueNote">Best value = cheapest flight + the highest guest-review hotel with a total of $350 or less in this Expedia result set (Hotel Los Girasoles Cancun, 8.8, $339.29). That definition is fixed in the app, not a claim about all hotels.</span></p>
+    <div id="exactCompareWrap" style="display:none">
+      <h3>Compare bundles — up to 3 pinned</h3>
+      <div class="table-wrap" id="exactCompareTable"></div>
+    </div>
+    <p class="muted" id="exactNote">Demo dataset only. For any other route or dates, the app falls back to the estimate engine above — exact offers for other routes need the backend step described in the README (a small server calling Duffel and Expedia and returning JSON to this page).</p>
+  </section>
+
 
   <div class="grid">
     <section class="card">
@@ -162,12 +194,12 @@
 
     <section class="card">
       <div id="stickySummary" class="sticky" style="display:none"></div>
-      <h2 id="resultsTitle">Results</h2>
-      <p id="resultsSummary" class="muted">Enter a trip and press “Find cheapest windows”.</p>
+      <h2 id="resultsTitle">Estimate only — use when your destination has no exact data yet</h2>
+      <p id="resultsSummary" class="muted">Estimate only — these totals are never mixed with exact bundles above. Enter a trip and press “Find cheapest windows”.</p>
       <div id="emptyState" class="empty" style="display:none"></div>
       <div id="selectedDetail"></div>
       <div id="calendarWrap" style="display:none">
-        <h3>Price calendar — total cost by departure date</h3>
+        <h3>Price calendar (estimate only) — total cost by departure date</h3>
         <p class="muted">Green = bottom quartile (cheap), yellow = typical, red = top quartile (expensive) in this window. Click a date to see its detail and book-or-wait indicator.</p>
         <div id="calendar"></div>
       </div>
@@ -185,35 +217,7 @@
     </section>
   </div>
 
-  <section class="card" style="margin-top:16px" id="exactSection">
-    <h2>Exact options — SLC → Cancun demo (snapshot, not live)</h2>
-    <p><strong>Route:</strong> Salt Lake City (SLC) → Cancun (CUN), <strong>depart 2027-01-27, return 2027-02-03</strong>, 7 nights, 2 adults, economy. Searched 2026-11-04.</p>
-    <p class="muted">Flights: Duffel search, coverage complete — 2,339 offers scanned. Hotels: Expedia guest search, 50 hotels returned, sorted by total including mandatory taxes and fees. Hotel results via Expedia. Prices are a snapshot from that search and will change — re-check before booking. Nothing here is booked, and no payment is taken in this app.</p>
-    <p class="muted" id="exactCruiseNote" style="display:none"><strong>Cruise is still an estimate, not an exact offer.</strong> There is no cruise connector and no usable public cruise-price API: Expedia Cruises is a website search, and commercial cruise APIs (for example Widgety, Cruise Itinerary, Travelopro) need a key or contract. So the cruise line in bundles below uses the v2 estimate ($1,689.60 + 8% tax = $1,824.77) and is labeled as such. To get an exact cruise price, search Expedia Cruises or a cruise line site directly for the same dates.</p>
-    <h3>Pick a flight</h3>
-    <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Airline</th><th>Outbound</th><th>Return</th><th>Stops (total)</th><th>Travel time</th><th>Total (2 adults)</th></tr></thead><tbody id="exactFlights"></tbody></table></div>
-    <h3>Pick a hotel</h3>
-    <div class="table-wrap"><table><thead><tr><th>Pick</th><th>Hotel</th><th>Stars</th><th>Guest review</th><th>Room</th><th>Total incl. taxes &amp; fees (7 nights)</th></tr></thead><tbody id="exactHotels"></tbody></table></div>
-    <div id="exactParkControls" style="display:none">
-      <h3>Theme parks (estimate)</h3>
-      <p class="muted">Theme parks are off unless you check “Theme parks” in Your trip above. When on, pick a park and days here — totals below recalculate. Prices are estimates only; check the park's official site for exact ticket prices.</p>
-      <div class="row">
-        <div><label for="exactParkSelect">Theme park</label><select id="exactParkSelect"><option value="wdw">Walt Disney World (Orlando)</option><option value="disneyland">Disneyland (California)</option><option value="universalOrlando">Universal Orlando</option><option value="universalHollywood">Universal Hollywood</option><option value="legolandFlorida">Legoland Florida</option><option value="seaworldOrlando">SeaWorld Orlando</option></select></div>
-        <div><label for="exactParkDays">Park days (1–7)</label><input id="exactParkDays" type="number" min="1" max="7" value="7"></div>
-      </div>
-    </div>
-    <h3>Bundles — pick a flight and hotel above and the totals recalculate</h3>
-    <p class="muted">Bundle totals = flight + hotel + (cruise estimate + 8% cruise tax only when cruise is checked) + (theme park tickets only when theme parks are checked). Hotel totals from Expedia already include mandatory taxes and fees, and flight totals are the Duffel totals, so no extra tax is added to those two lines. The old v2 10% bundle discount is <strong>not</strong> applied to exact offers — it was an estimate, not a real offer. Per person = bundle total ÷ 2 adults.</p>
-    <div class="table-wrap"><table><thead id="exactBundlesHead"></thead><tbody id="exactBundles"></tbody></table></div>
-    <p><button type="button" id="bestValueBtn" class="small-btn">Apply Best value picks</button> <span class="muted">Best value = cheapest flight + the highest guest-review hotel with a total of $350 or less in this Expedia result set (Hotel Los Girasoles Cancun, 8.8, $339.29). That definition is fixed in the app, not a claim about all hotels.</span></p>
-    <div id="exactCompareWrap" style="display:none">
-      <h3>Compare bundles — up to 3 pinned</h3>
-      <div class="table-wrap" id="exactCompareTable"></div>
-    </div>
-    <p class="muted" id="exactNote">Demo dataset only. For any other route or dates, the app falls back to the estimate engine above — exact offers for other routes need the backend step described in the README (a small server calling Duffel and Expedia and returning JSON to this page).</p>
-  </section>
-
-  <section class="card" style="margin-top:16px">
+    <section class="card" style="margin-top:16px">
     <h2>Live prices — how to plug in real APIs later</h2>
     <p class="muted">This prototype deliberately does <strong>not</strong> call live APIs and does not store keys in code. To go live, fill in the fields below (they stay in your browser only, in this page session) and implement the placeholder functions in the page source. Until then, estimates are used.</p>
     <div class="row">
@@ -478,25 +482,70 @@ if (typeof document !== 'undefined' && document.getElementById) {
   renderSaved();
 }
 
-const DEMO_EXACT = {
-  route: 'SLC → CUN', departure: '2027-01-27', returnDate: '2027-02-03', nights: 7, adults: 2,
-  searchedOn: '2026-11-04', flightSource: 'Duffel (coverage complete, 2339 offers scanned)', hotelSource: 'Expedia guest search (50 hotels, sorted by total including taxes and fees)',
-  cruiseEstimate: 1689.60, cruiseTaxRate: 0.08,
-  flights: [
-    { id: 'F1', airline: 'Southwest Airlines', outbound: '2027-01-27 08:40 → 19:45', outboundFlights: 'WN3980, WN1450, WN0307', outboundStops: 2, returnTrip: '2027-02-03 17:20 → 11:45+1', returnFlights: 'WN0306, WN1852, WN0971', returnStops: 2, stops: 4, duration: '29h30m', total: 1096.74, cabin: 'Economy', note: 'Cheapest in Duffel search' },
-    { id: 'F2', airline: 'Southwest Airlines', outbound: '2027-01-27 07:30 → 19:45', outboundFlights: 'WN1144, WN1450, WN0307', outboundStops: 2, returnTrip: '2027-02-03 17:20 → 11:45+1', returnFlights: 'WN0306, WN1852, WN0971', returnStops: 2, stops: 4, duration: '30h40m', total: 1096.74, cabin: 'Economy', note: 'Same total, earlier outbound' },
-    { id: 'F3', airline: 'Aeromexico', outbound: '2027-01-27 09:35 → 19:43', outboundFlights: 'AM3050, AM0540', outboundStops: 1, returnTrip: '2027-02-03 07:56 → 19:16', returnFlights: 'AM0509, AM0220, AM0792', returnStops: 2, stops: 3, duration: '21h28m', total: 1380.54, cabin: 'Economy', note: 'Cheapest Aeromexico in Duffel search' },
-    { id: 'F4', airline: 'Delta Air Lines', outbound: '2027-01-27 11:00 → 21:30', outboundFlights: 'DL0885, DL1939', outboundStops: 1, returnTrip: '2027-02-03 17:20 → 20:33', returnFlights: 'DL0647', returnStops: 0, stops: 1, duration: '13h43m', total: 1389.54, cabin: 'Economy', note: 'Cheapest 1-stop total in Duffel search' },
-    { id: 'F5', airline: 'Delta Air Lines', outbound: '2027-01-27 09:35 → 16:20', outboundFlights: 'DL0649', outboundStops: 0, returnTrip: '2027-02-03 17:20 → 20:33', returnFlights: 'DL0647', returnStops: 0, stops: 0, duration: '9h58m', total: 2288.54, cabin: 'Economy', note: 'Nonstop / fastest in Duffel search' }
-  ],
-  hotels: [
-    { id: 'H1', name: 'Hotel Hacienda de Castilla', stars: 3.0, reviewScore: 7.4, reviewCount: 887, room: 'Standard Room, 2 Double Beds — Non refundable Room Only', total: 270.47, refundable: false },
-    { id: 'H2', name: 'Hotel Colonial Cancun', stars: 3.0, reviewScore: 7.6, reviewCount: 639, room: 'Standard Double Room', total: 292.07, refundable: true },
-    { id: 'H3', name: 'Suites Cancun Center Cancun', stars: 2.5, reviewScore: 7.4, reviewCount: 276, room: 'Standard Double Room', total: 296.37, refundable: true },
-    { id: 'H4', name: 'Terracaribe Hotel - In Cancun (Downtown Cancun)', stars: 3.0, reviewScore: 7.8, reviewCount: 787, room: 'Standard Room, 1 Double Bed', total: 311.84, refundable: true },
-    { id: 'H5', name: 'Hotel Los Girasoles Cancun', stars: 3.0, reviewScore: 8.8, reviewCount: 447, room: 'Twin Room', total: 339.29, refundable: true }
-  ]
+var EXACT_DATA = {
+  cancun: {
+    key: 'cancun', label: 'Cancun', route: 'SLC → CUN', origin: 'Salt Lake City (SLC)', destination: 'Cancun (CUN)',
+    departure: '2027-01-27', returnDate: '2027-02-03', nights: 7, adults: 2, searchedOn: '2026-11-04',
+    flightSource: 'Duffel (coverage complete, 2,339 offers scanned)', hotelSource: 'Expedia guest search (50 hotels, sorted by total including taxes and fees)',
+    cruiseEstimate: 1689.60, cruiseTaxRate: 0.08,
+    flights: [
+      { id: 'F1', airline: 'Southwest Airlines', outbound: '2027-01-27 08:40 → 19:45', outboundFlights: 'WN3980, WN1450, WN0307', returnTrip: '2027-02-03 17:20 → 11:45+1', returnFlights: 'WN0306, WN1852, WN0971', stops: 4, duration: '29h30m', total: 1096.74, cabin: 'Economy', note: 'Cheapest in Duffel search' },
+      { id: 'F2', airline: 'Southwest Airlines', outbound: '2027-01-27 07:30 → 19:45', outboundFlights: 'WN1144, WN1450, WN0307', returnTrip: '2027-02-03 17:20 → 11:45+1', returnFlights: 'WN0306, WN1852, WN0971', stops: 4, duration: '30h40m', total: 1096.74, cabin: 'Economy', note: 'Same total, earlier outbound' },
+      { id: 'F3', airline: 'Aeromexico', outbound: '2027-01-27 09:35 → 19:43', outboundFlights: 'AM3050, AM0540', returnTrip: '2027-02-03 07:56 → 19:16', returnFlights: 'AM0509, AM0220, AM0792', stops: 3, duration: '21h28m', total: 1380.54, cabin: 'Economy', note: 'Cheapest Aeromexico in Duffel search' },
+      { id: 'F4', airline: 'Delta Air Lines', outbound: '2027-01-27 11:00 → 21:30', outboundFlights: 'DL0885, DL1939', returnTrip: '2027-02-03 17:20 → 20:33', returnFlights: 'DL0647', stops: 1, duration: '13h43m', total: 1389.54, cabin: 'Economy', note: 'Cheapest 1-stop total in Duffel search' },
+      { id: 'F5', airline: 'Delta Air Lines', outbound: '2027-01-27 09:35 → 16:20', outboundFlights: 'DL0649', returnTrip: '2027-02-03 17:20 → 20:33', returnFlights: 'DL0647', stops: 0, duration: '9h58m', total: 2288.54, cabin: 'Economy', note: 'Nonstop / fastest in Duffel search' }
+    ],
+    hotels: [
+      { id: 'H1', name: 'Hotel Hacienda de Castilla', stars: 3.0, reviewScore: 7.4, reviewCount: 887, room: 'Standard Room, 2 Double Beds — Non refundable Room Only', total: 270.47, refundable: false },
+      { id: 'H2', name: 'Hotel Colonial Cancun', stars: 3.0, reviewScore: 7.6, reviewCount: 639, room: 'Standard Double Room', total: 292.07, refundable: true },
+      { id: 'H3', name: 'Suites Cancun Center Cancun', stars: 2.5, reviewScore: 7.4, reviewCount: 276, room: 'Standard Double Room', total: 296.37, refundable: true },
+      { id: 'H4', name: 'Terracaribe Hotel - In Cancun (Downtown Cancun)', stars: 3.0, reviewScore: 7.8, reviewCount: 787, room: 'Standard Room, 1 Double Bed', total: 311.84, refundable: true },
+      { id: 'H5', name: 'Hotel Los Girasoles Cancun', stars: 3.0, reviewScore: 8.8, reviewCount: 447, room: 'Twin Room', total: 339.29, refundable: true }
+    ]
+  },
+  orlando: {
+    key: 'orlando', label: 'Orlando', route: 'SLC → MCO', origin: 'Salt Lake City (SLC)', destination: 'Orlando (MCO)',
+    departure: '2027-01-27', returnDate: '2027-02-03', nights: 7, adults: 2, searchedOn: '2026-11-05',
+    flightSource: 'Duffel (coverage complete, 2,445 offers scanned)', hotelSource: 'Expedia guest search (50 hotels, sorted by total including taxes and fees)',
+    cruiseEstimate: 1689.60, cruiseTaxRate: 0.08,
+    flights: [
+      { id: 'F1', airline: 'Frontier Airlines', outbound: '2027-01-27 07:40 → 16:21', outboundFlights: 'F93862, F93312', returnTrip: '2027-02-03 19:20 → 00:04+1', returnFlights: 'F92519, F94251', stops: 2, duration: '13h25m', total: 539.96, cabin: 'Economy', note: 'Cheapest in Duffel search' },
+      { id: 'F2', airline: 'Delta Air Lines', outbound: '2027-01-27 17:41 → 23:59', outboundFlights: 'DL2056', returnTrip: '2027-02-03 07:06 → 10:13', returnFlights: 'DL2025', stops: 0, duration: '9h25m', total: 817.60, cabin: 'Economy', note: 'Cheapest nonstop in Duffel search' },
+      { id: 'F3', airline: 'Southwest Airlines', outbound: '2027-01-27 06:50 → 15:30', outboundFlights: 'WN0949', returnTrip: '2027-02-03 15:05 → 21:55', returnFlights: 'WN2513, WN1590', stops: 2, duration: '15h30m', total: 819.80, cabin: 'Economy', note: 'Cheapest Southwest in Duffel search' },
+      { id: 'F4', airline: 'United Airlines', outbound: '2027-01-27 14:35 → 23:23', outboundFlights: 'UA1662, UA2803', returnTrip: '2027-02-03 08:00 → 15:29', returnFlights: 'UA2855, UA1413', stops: 2, duration: '16h17m', total: 828.80, cabin: 'Economy', note: 'Cheapest United in Duffel search' },
+      { id: 'F5', airline: 'American Airlines', outbound: '2027-01-27 07:03 → 16:52', outboundFlights: 'AA1214, AA2221', returnTrip: '2027-02-03 16:26 → 23:45', returnFlights: 'AA1443, AA1683', stops: 2, duration: '17h08m', total: 1068.82, cabin: 'Economy', note: 'Cheapest American in Duffel search' }
+    ],
+    hotels: [
+      { id: 'H1', name: 'Rodeway Inn Kissimmee Maingate West', stars: 2.0, reviewScore: 6.8, reviewCount: 1312, room: 'Room, 1 Double Bed, Accessible, Non Smoking — Advance Purchase Rate', total: 413.98, refundable: false },
+      { id: 'H2', name: 'Orlando Palms Hotel', stars: 2.5, reviewScore: 7.8, reviewCount: 3567, room: 'Standard Single Room', total: 437.86, refundable: false },
+      { id: 'H3', name: 'Budget Inn Sanford', stars: 2.0, reviewScore: 6.8, reviewCount: 1002, room: 'Standard 2 beds non smoking', total: 530.98, refundable: true },
+      { id: 'H4', name: 'Ramada by Wyndham Kissimmee Gateway', stars: 3.0, reviewScore: 8.2, reviewCount: 3680, room: 'Room, 2 Queen Beds, Non Smoking (Pet-Friendly)', total: 535.04, refundable: false },
+      { id: 'H5', name: 'Travelodge by Wyndham Orlando Lake Buena Vista South', stars: 2.0, reviewScore: 7.6, reviewCount: 1006, room: 'Room, 1 Queen Bed, Accessible, Non Smoking (Mobility/Hearing, Roll-In Shower)', total: 539.65, refundable: true }
+    ]
+  },
+  honolulu: {
+    key: 'honolulu', label: 'Honolulu', route: 'SLC → HNL', origin: 'Salt Lake City (SLC)', destination: 'Honolulu (HNL)',
+    departure: '2027-01-27', returnDate: '2027-02-03', nights: 7, adults: 2, searchedOn: '2026-11-05',
+    flightSource: 'Duffel (coverage complete, 1,606 offers scanned)', hotelSource: 'Expedia guest search (50 hotels, sorted by total including taxes and fees)',
+    cruiseEstimate: 1689.60, cruiseTaxRate: 0.08,
+    flights: [
+      { id: 'F1', airline: 'Southwest Airlines', outbound: '2027-01-27 06:50 → 18:55', outboundFlights: 'WN0949, WN3373, WN2022', returnTrip: '2027-02-03 23:20 → 11:10+1', returnFlights: 'WN1773, WN3612', stops: 3, duration: '23h55m', total: 1010.22, cabin: 'Economy', note: 'Cheapest in Duffel search' },
+      { id: 'F2', airline: 'Alaska Airlines', outbound: '2027-01-27 08:45 → 21:26', outboundFlights: 'AS3018, AS0857', returnTrip: '2027-02-03 06:00 → 21:23', returnFlights: 'AS1003, AS0370, AS1541', stops: 3, duration: '28h04m', total: 1115.58, cabin: 'Economy', note: 'Cheapest Alaska in Duffel search' },
+      { id: 'F3', airline: 'Delta Air Lines', outbound: '2027-01-27 09:39 → 17:54', outboundFlights: 'DL1095, DL0465', returnTrip: '2027-02-03 20:25 → 05:35+1', returnFlights: 'DL0357', stops: 1, duration: '17h25m', total: 1312.00, cabin: 'Economy', note: 'Cheapest Delta in Duffel search' },
+      { id: 'F4', airline: 'United Airlines', outbound: '2027-01-27 06:00 → 13:13', outboundFlights: 'UA4763, UA1175', returnTrip: '2027-02-03 23:25 → 13:04+1', returnFlights: 'UA1346, UA0643', stops: 2, duration: '20h52m', total: 1331.58, cabin: 'Economy', note: 'Cheapest United in Duffel search' },
+      { id: 'F5', airline: 'American Airlines', outbound: '2027-01-27 08:00 → 15:45', outboundFlights: 'AA6327, AA0693', returnTrip: '2027-02-03 22:37 → 13:03+1', returnFlights: 'AA0694, AA6229', stops: 2, duration: '22h11m', total: 1331.58, cabin: 'Economy', note: 'Cheapest American in Duffel search' }
+    ],
+    hotels: [
+      { id: 'H1', name: 'Ewa Hotel Waikiki', stars: 2.0, reviewScore: 7.6, reviewCount: 1164, room: 'Room (1-Moderate)', total: 976.52, refundable: true, note: 'Cheapest private room in this Expedia result set' },
+      { id: 'H2', name: 'Royal Grove Waikiki', stars: 2.0, reviewScore: 7.2, reviewCount: 1856, room: 'Standard Room, 1 Queen Bed', total: 999.67, refundable: true },
+      { id: 'H3', name: 'Waikiki Monarch Hotel', stars: 2.5, reviewScore: 6.2, reviewCount: 1002, room: 'Deluxe Double Double', total: 1026.61, refundable: true },
+      { id: 'H4', name: 'Ramada Plaza by Wyndham Waikiki', stars: 3.0, reviewScore: 8.6, reviewCount: 2707, room: 'Standard Room, 1 Queen Bed, Non Smoking', total: 1052.49, refundable: false },
+      { id: 'H5', name: 'Bposhtels Waikiki Retreat', stars: 2.0, reviewScore: 7.6, reviewCount: 53, room: 'Deluxe Shared Dormitory, Women only', total: 684.95, refundable: false, note: 'Shared dormitory — cheapest overall, NOT a private room for 2; listed last for that reason' }
+    ]
+  }
 };
+var DEMO_EXACT = EXACT_DATA.cancun;
+
 function buildBundle(kind, flight, hotel, extra) {
   const ex = extra || {};
   const f = kind === 'Hotel only' ? 0 : (flight ? flight.total : 0);
@@ -523,11 +572,10 @@ function buildExactBundles(flight, hotel, opts) {
 }
 function bestValuePicks() {
   const flight = DEMO_EXACT.flights.reduce((a, b) => (b.total < a.total ? b : a));
-  const underCap = DEMO_EXACT.hotels.filter(h => h.total <= 350);
-  const hotel = underCap.reduce((a, b) => (b.reviewScore > a.reviewScore ? b : a));
+  const hotel = DEMO_EXACT.hotels.reduce((a, b) => (b.reviewScore > a.reviewScore || (b.reviewScore === a.reviewScore && b.total < a.total) ? b : a));
   return { flight, hotel };
 }
-if (typeof module !== 'undefined' && module.exports) { module.exports = { generateResults, computeWindow, priceFlight, priceHotel, priceCruise, priceParks, THEME_PARKS, hashString, seededRandom, calendarCells, addPin, cheapestMonthSummary, bookIndicator, PRESETS, DEMO_EXACT, buildBundle, buildExactBundles, bestValuePicks }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { generateResults, computeWindow, priceFlight, priceHotel, priceCruise, priceParks, THEME_PARKS, hashString, seededRandom, calendarCells, addPin, cheapestMonthSummary, bookIndicator, PRESETS, DEMO_EXACT, EXACT_DATA, buildBundle, buildExactBundles, bestValuePicks }; }
 </script>
 <script>
 (function () {
@@ -535,15 +583,28 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
   var selFlight = DEMO_EXACT.flights[0], selHotel = DEMO_EXACT.hotels[0], pinnedBundles = [];
   function money2(n) { return '$' + Math.round(n * 100) / 100; }
   function moneyR(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function renderExactHeader() {
+    var r = document.getElementById('exactRoute'); if (r) r.innerHTML = '<strong>Route:</strong> ' + DEMO_EXACT.origin + ' → ' + DEMO_EXACT.destination + ' (' + DEMO_EXACT.route + '), <strong>depart ' + DEMO_EXACT.departure + ', return ' + DEMO_EXACT.returnDate + '</strong>, ' + DEMO_EXACT.nights + ' nights, ' + DEMO_EXACT.adults + ' adults, economy. Searched ' + DEMO_EXACT.searchedOn + '.';
+    var s = document.getElementById('exactSource'); if (s) s.textContent = 'Flights: ' + DEMO_EXACT.flightSource + '. Hotels: ' + DEMO_EXACT.hotelSource + '. Prices are a snapshot from that search and will change — re-check before booking. Nothing here is booked, and no payment is taken in this app.';
+    var bv = document.getElementById('bestValueNote'); if (bv) { var picks = bestValuePicks(); bv.textContent = 'Best value = cheapest flight + the highest guest-review hotel in this exact list: ' + picks.flight.airline + ' (' + moneyR(picks.flight.total) + ') + ' + picks.hotel.name + ' (' + picks.hotel.reviewScore + ', ' + moneyR(picks.hotel.total) + '). That definition is fixed in the app, not a claim about all hotels.'; }
+    document.querySelectorAll('.exact-dest-btn').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-exact-dest') === DEMO_EXACT.key); });
+  }
+  function setExactDestination(key) {
+    if (!EXACT_DATA[key]) return;
+    DEMO_EXACT = EXACT_DATA[key];
+    selFlight = DEMO_EXACT.flights[0]; selHotel = DEMO_EXACT.hotels[0]; pinnedBundles = [];
+    renderExactHeader(); renderFlights(); renderHotels(); renderBundles();
+  }
+  document.querySelectorAll('.exact-dest-btn').forEach(function (b) { b.addEventListener('click', function () { setExactDestination(b.getAttribute('data-exact-dest')); }); });
   function renderFlights() {
     document.getElementById('exactFlights').innerHTML = DEMO_EXACT.flights.map(function (f) {
-      return '<tr><td><input type="radio" name="exactFlight" value="' + f.id + '"' + (selFlight.id === f.id ? ' checked' : '') + '></td><td><strong>' + f.airline + '</strong><br><span class="muted">' + f.note + '</span></td><td>' + f.outbound + '<br><span class="muted">' + f.outboundFlights + ' · ' + f.outboundStops + ' stop(s)</span></td><td>' + f.returnTrip + '<br><span class="muted">' + f.returnFlights + ' · ' + f.returnStops + ' stop(s)</span></td><td>' + f.stops + '</td><td>' + f.duration + '</td><td><strong>' + moneyR(f.total) + '</strong></td></tr>';
+      return '<tr><td><input type="radio" name="exactFlight" value="' + f.id + '"' + (selFlight.id === f.id ? ' checked' : '') + '></td><td><strong>' + f.airline + '</strong><br><span class="muted">' + f.note + '</span></td><td>' + f.outbound + '<br><span class="muted">' + f.outboundFlights + '</span></td><td>' + f.returnTrip + '<br><span class="muted">' + f.returnFlights + '</span></td><td>' + f.stops + '</td><td>' + f.duration + '</td><td><strong>' + moneyR(f.total) + '</strong></td></tr>';
     }).join('');
     document.querySelectorAll('input[name="exactFlight"]').forEach(function (r) { r.addEventListener('change', function () { selFlight = DEMO_EXACT.flights.find(function (f) { return f.id === r.value; }) || selFlight; renderBundles(); }); });
   }
   function renderHotels() {
     document.getElementById('exactHotels').innerHTML = DEMO_EXACT.hotels.map(function (h) {
-      return '<tr><td><input type="radio" name="exactHotel" value="' + h.id + '"' + (selHotel.id === h.id ? ' checked' : '') + '></td><td><strong>' + h.name + '</strong></td><td>' + h.stars + '★</td><td>' + h.reviewScore + ' (' + h.reviewCount + ' reviews)</td><td>' + h.room + '<br><span class="muted">' + (h.refundable ? 'Refundable' : 'Non-refundable') + '</span></td><td><strong>' + moneyR(h.total) + '</strong></td></tr>';
+      return '<tr><td><input type="radio" name="exactHotel" value="' + h.id + '"' + (selHotel.id === h.id ? ' checked' : '') + '></td><td><strong>' + h.name + '</strong>' + (h.note ? '<br><span class="muted">' + h.note + '</span>' : '') + '</td><td>' + h.stars + '★</td><td>' + h.reviewScore + ' (' + h.reviewCount + ' reviews)</td><td>' + h.room + '<br><span class="muted">' + (h.refundable ? 'Refundable' : 'Non-refundable') + '</span></td><td><strong>' + moneyR(h.total) + '</strong></td></tr>';
     }).join('');
     document.querySelectorAll('input[name="exactHotel"]').forEach(function (r) { r.addEventListener('change', function () { selHotel = DEMO_EXACT.hotels.find(function (h) { return h.id === r.value; }) || selHotel; renderBundles(); }); });
   }
@@ -585,10 +646,11 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
     document.getElementById('exactCompareTable').innerHTML = html;
   }
   document.getElementById('bestValueBtn').addEventListener('click', function () { var bv = bestValuePicks(); selFlight = bv.flight; selHotel = bv.hotel; renderFlights(); renderHotels(); renderBundles(); });
+  [['exactUseCruise', 'useCruise'], ['exactUseParks', 'useParks']].forEach(function (pair) { var ex = document.getElementById(pair[0]); if (!ex) return; ex.addEventListener('change', function () { var main = document.getElementById(pair[1]); if (main) { main.checked = ex.checked; main.dispatchEvent(new Event('change', { bubbles: true })); } renderBundles(); }); });
   var epSel = document.getElementById('exactParkSelect'); if (epSel) epSel.addEventListener('change', renderBundles);
   var epDays = document.getElementById('exactParkDays'); if (epDays) epDays.addEventListener('change', renderBundles);
   window.__voRenderExact = renderBundles;
-  renderFlights(); renderHotels(); renderBundles();
+  renderExactHeader(); renderFlights(); renderHotels(); renderBundles();
 })();
 </script>
 <script>
@@ -620,6 +682,8 @@ if (typeof module !== 'undefined' && module.exports) { module.exports = { genera
     if (el('parkControls')) el('parkControls').style.display = parksOn ? 'block' : 'none';
     if (el('exactCruiseNote')) el('exactCruiseNote').style.display = cruiseOn ? 'block' : 'none';
     if (el('exactParkControls')) el('exactParkControls').style.display = parksOn ? 'block' : 'none';
+    if (el('exactUseCruise')) el('exactUseCruise').checked = cruiseOn;
+    if (el('exactUseParks')) el('exactUseParks').checked = parksOn;
     var dest = (el('destination') ? el('destination').value : '').toLowerCase();
     var relevant = dest.indexOf('orlando') !== -1 || dest.indexOf('anaheim') !== -1 || dest === 'florida';
     if (el('parkSuggestion')) el('parkSuggestion').style.display = (relevant && !parksOn) ? 'block' : 'none';
