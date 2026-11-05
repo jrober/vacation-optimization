@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vacation Optimizer — Cheapest Time to Go</title>
+<style>
+  :root { --bg:#0f172a; --card:#ffffff; --accent:#0ea5a4; --accent2:#f59e0b; --text:#1e293b; --muted:#64748b; --green:#16a34a; --red:#dc2626; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f1f5f9; color:var(--text); }
+  header { background:var(--bg); color:#fff; padding:28px 20px; }
+  header h1 { margin:0 0 6px; font-size:28px; }
+  header p { margin:0; color:#cbd5e1; max-width:760px; }
+  .notice { background:#fef3c7; border:1px solid #fcd34d; padding:12px 14px; border-radius:10px; margin:16px auto; max-width:1080px; font-size:14px; }
+  main { max-width:1080px; margin:0 auto; padding:0 16px 48px; }
+  .grid { display:grid; grid-template-columns: 1fr 1.6fr; gap:16px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  .card { background:var(--card); border-radius:14px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+  label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
+  input[type=text], input[type=date], input[type=number], input[type=password] { width:100%; padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:15px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .checks label { display:inline-block; margin-right:14px; font-weight:500; }
+  button { background:var(--accent); color:#fff; border:0; padding:12px 18px; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; margin-top:16px; width:100%; }
+  button:hover { filter:brightness(1.05); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid #e2e8f0; }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; }
+  .under { background:#dcfce7; color:#166534; } .over { background:#fee2e2; color:#991b1b; }
+  .chart { display:flex; align-items:flex-end; gap:3px; height:180px; margin-top:12px; overflow-x:auto; padding-bottom:6px; }
+  .bar { flex:1 0 14px; background:var(--accent); border-radius:4px 4px 0 0; min-width:14px; position:relative; }
+  .bar.cheapest { background:var(--green); } .bar.expensive { background:var(--red); opacity:.7; }
+  .bar span { display:none; }
+  .bar:hover span { display:block; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:4px 6px; border-radius:6px; font-size:11px; white-space:nowrap; z-index:2; }
+  .muted { color:var(--muted); font-size:13px; }
+  code { background:#f1f5f9; padding:1px 5px; border-radius:4px; }
+  details { margin-top:10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✈️ Vacation Optimizer</h1>
+  <p>Enter a destination and a flexible window. We compare every possible departure date in that window, add up flight + hotel + cruise, and rank the cheapest trips first.</p>
+</header>
+
+<main>
+  <div class="notice"><strong>Estimates only — not live prices.</strong> All prices below are deterministic estimates for comparison, until real APIs are connected in the “Live prices” section. Do not book on these numbers alone.</div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Your trip</h2>
+      <form id="tripForm">
+        <label for="destination">Destination</label>
+        <input id="destination" type="text" value="Caribbean" required>
+
+        <div class="row">
+          <div><label for="earliest">Earliest departure</label><input id="earliest" type="date" value="2027-01-01" required></div>
+          <div><label for="latest">Latest departure</label><input id="latest" type="date" value="2027-01-31" required></div>
+        </div>
+
+        <div class="row">
+          <div><label for="nights">Trip length (nights)</label><input id="nights" type="number" min="1" max="30" value="7" required></div>
+          <div><label for="budget">Budget (optional, total $)</label><input id="budget" type="number" min="0" placeholder="e.g. 4000"></div>
+        </div>
+
+        <div class="row">
+          <div><label for="adults">Adults</label><input id="adults" type="number" min="1" max="20" value="2" required></div>
+          <div><label for="children">Children</label><input id="children" type="number" min="0" max="20" value="0"></div>
+        </div>
+
+        <label for="homeAirport">Home airport (optional)</label>
+        <input id="homeAirport" type="text" placeholder="e.g. SLC">
+
+        <label>Include</label>
+        <div class="checks">
+          <label><input id="useFlight" type="checkbox" checked> Flight</label>
+          <label><input id="useHotel" type="checkbox" checked> Hotel</label>
+          <label><input id="useCruise" type="checkbox" checked> Cruise</label>
+        </div>
+
+        <button type="submit">Find cheapest windows</button>
+        <p class="muted">Tip: widen the window to find bigger savings. Weekend departures are usually pricier in this model.</p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 id="resultsTitle">Results</h2>
+      <p id="resultsSummary" class="muted">Enter a trip and press “Find cheapest windows”.</p>
+      <div id="chartWrap" style="display:none">
+        <h3>Cost by departure date</h3>
+        <div id="chart" class="chart" role="img" aria-label="Bar chart of total cost by departure date"></div>
+        <p class="muted">Green = cheapest window in the range. Red = most expensive. Hover a bar for the date and total.</p>
+      </div>
+      <div id="results"></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Live prices — how to plug in real APIs later</h2>
+    <p class="muted">This prototype deliberately does <strong>not</strong> call live APIs and does not store keys in code. To go live, fill in the fields below (they stay in your browser only, in this page session) and implement the placeholder functions in the page source. Until then, estimates are used.</p>
+    <div class="row">
+      <div><label for="duffelKey">Duffel API key (flights)</label><input id="duffelKey" type="password" placeholder="Duffel key — never hardcode"></div>
+      <div><label for="hotelKey">Hotel API key</label><input id="hotelKey" type="password" placeholder="Hotel provider key"></div>
+    </div>
+    <label for="cruiseKey">Cruise API key</label>
+    <input id="cruiseKey" type="password" placeholder="Cruise line / aggregator key">
+    <details>
+      <summary>Placeholder fetch functions (in source)</summary>
+      <p><code>fetchLiveFlight()</code> → Duffel Offers API (<code>POST https://api.duffel.com/air/offers</code>).<br>
+      <code>fetchLiveHotel()</code> → your hotel booking API (e.g. Booking.com / Expedia partner API) for nightly rates by date.<br>
+      <code>fetchLiveCruise()</code> → cruise line / aggregator API for sailing price by departure date and cabin.<br>
+      Each should return a per-date price in the same shape as the estimate functions, or <code>null</code> to fall back to estimates. Keep keys out of git — use environment variables / a server proxy in production, never a client-side key in a public page.</p>
+    </details>
+    <button type="button" id="liveCheckBtn" style="background:#334155">Check live APIs (placeholder)</button>
+    <p id="liveStatus" class="muted"></p>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>How the estimate works</h2>
+    <ul>
+      <li><strong>Flight:</strong> base round-trip per adult, adjusted by weekday (Tue/Wed cheapest, Fri/Sun dearest), season by month, and a deterministic pseudo-random variation per date + destination — so the same search always gives the same ranking.</li>
+      <li><strong>Hotel:</strong> nightly rate, with a weekend (Fri/Sat night) premium, season, and the same per-date variation.</li>
+      <li><strong>Cruise:</strong> per person, by trip length — 3-night style, 4–5-night style, or 7+ night style — children at 50% of the adult cruise price.</li>
+      <li><strong>Total</strong> = flight + hotel + cruise for the selected components. <strong>Per-person</strong> = total ÷ (adults + children). Savings = most-expensive window total − this window total.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+// ---- Deterministic pseudo-random helpers (pure, testable) ----
+function hashString(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function seededRandom(seed) {
+  // mulberry32
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function seasonFactor(month) { // 1-12
+  const m = { 1: 1.00, 2: 0.95, 3: 1.05, 4: 1.00, 5: 1.05, 6: 1.20, 7: 1.25, 8: 1.20, 9: 1.00, 10: 0.95, 11: 0.95, 12: 1.15 };
+  return m[month] || 1.0;
+}
+function weekdayFactor(day) { // 0 Sun … 6 Sat
+  return { 0: 1.12, 1: 0.95, 2: 0.90, 3: 0.92, 4: 1.00, 5: 1.15, 6: 1.08 }[day] || 1.0;
+}
+function money(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtDate(d) { return d.toISOString().slice(0, 10); }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+// ---- Price model (estimates only) ----
+function priceFlight(departure, dest, adults, children) {
+  const rand = seededRandom(hashString(dest + '|' + fmtDate(departure)));
+  const base = 420 * seasonFactor(departure.getMonth() + 1) * weekdayFactor(departure.getDay());
+  const perAdult = base * (0.85 + rand() * 0.30);
+  const perChild = perAdult * 0.75;
+  return adults * perAdult + children * perChild;
+}
+function priceHotel(departure, nights, dest) {
+  let total = 0;
+  for (let i = 0; i < nights; i++) {
+    const night = addDays(departure, i);
+    const rand = seededRandom(hashString(dest + '|hotel|' + fmtDate(night)));
+    const weekend = (night.getDay() === 5 || night.getDay() === 6) ? 1.30 : 1.0;
+    total += 145 * seasonFactor(night.getMonth() + 1) * weekend * (0.85 + rand() * 0.30);
+  }
+  return total;
+}
+function priceCruise(nights, adults, children, departure, dest) {
+  const rand = seededRandom(hashString(dest + '|cruise|' + fmtDate(departure)));
+  let perAdult;
+  if (nights <= 3) perAdult = 450;
+  else if (nights <= 5) perAdult = 650;
+  else perAdult = 900;
+  perAdult *= seasonFactor(departure.getMonth() + 1) * (0.90 + rand() * 0.20);
+  return adults * perAdult + children * perAdult * 0.5;
+}
+
+// ---- Live API placeholders (return null = fall back to estimates) ----
+async function fetchLiveFlight(params) {
+  // TODO: POST https://api.duffel.com/air/offers with Duffel key from #duffelKey
+  // Return { total: number } or null. Never hardcode a key here.
+  return null;
+}
+async function fetchLiveHotel(params) {
+  // TODO: hotel booking API nightly rates by date. Return { total: number } or null.
+  return null;
+}
+async function fetchLiveCruise(params) {
+  // TODO: cruise API sailing price by departure date. Return { total: number } or null.
+  return null;
+}
+
+// ---- Core ranking ----
+function generateResults(opts) {
+  const { destination, earliest, latest, nights, adults, children, useFlight, useHotel, useCruise, budget } = opts;
+  const results = [];
+  let d = new Date(earliest);
+  const end = new Date(latest);
+  while (d <= end) {
+    const dep = new Date(d);
+    const flight = useFlight ? priceFlight(dep, destination, adults, children) : 0;
+    const hotel = useHotel ? priceHotel(dep, nights, destination) : 0;
+    const cruise = useCruise ? priceCruise(nights, adults, children, dep, destination) : 0;
+    const total = flight + hotel + cruise;
+    const people = Math.max(1, adults + children);
+    results.push({
+      departure: fmtDate(dep),
+      returnDate: fmtDate(addDays(dep, nights)),
+      flight, hotel, cruise, total,
+      perPerson: total / people,
+      underBudget: budget ? total <= budget : null
+    });
+    d = addDays(d, 1);
+  }
+  const sorted = [...results].sort((a, b) => a.total - b.total);
+  const maxTotal = sorted.length ? sorted[sorted.length - 1].total : 0;
+  sorted.forEach(r => { r.savingsVsMax = maxTotal - r.total; });
+  return { all: results, sorted, maxTotal };
+}
+
+// ---- Browser UI (only runs in a browser) ----
+if (typeof document !== 'undefined' && document.getElementById) {
+  const form = document.getElementById('tripForm');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const destination = document.getElementById('destination').value.trim() || 'Anywhere';
+      const earliest = document.getElementById('earliest').value;
+      const latest = document.getElementById('latest').value;
+      const nights = parseInt(document.getElementById('nights').value, 10);
+      const adults = parseInt(document.getElementById('adults').value, 10);
+      const children = parseInt(document.getElementById('children').value, 10) || 0;
+      const budget = parseFloat(document.getElementById('budget').value) || null;
+      if (!earliest || !latest || new Date(earliest) > new Date(latest)) {
+        document.getElementById('resultsSummary').textContent = 'Please pick a valid window: earliest departure on or before latest departure.';
+        return;
+      }
+      if (!(nights >= 1 && nights <= 30) || !(adults >= 1)) {
+        document.getElementById('resultsSummary').textContent = 'Please check nights (1–30) and adults (at least 1).';
+        return;
+      }
+      const { all, sorted, maxTotal } = generateResults({
+        destination, earliest, latest, nights, adults, children,
+        useFlight: document.getElementById('useFlight').checked,
+        useHotel: document.getElementById('useHotel').checked,
+        useCruise: document.getElementById('useCruise').checked,
+        budget
+      });
+      const top = sorted.slice(0, 10);
+      document.getElementById('resultsTitle').textContent = 'Cheapest windows — ' + destination;
+      document.getElementById('resultsSummary').textContent =
+        top.length + ' cheapest of ' + all.length + ' departure dates. Cheapest: ' + money(top[0].total) +
+        ' • Most expensive: ' + money(maxTotal) + ' • Max saving: ' + money(top[0].savingsVsMax) +
+        (budget ? ' • Budget: ' + money(budget) : '');
+      // Chart (all dates, in date order)
+      const chart = document.getElementById('chart');
+      const max = Math.max.apply(null, all.map(r => r.total)) || 1;
+      const min = Math.min.apply(null, all.map(r => r.total)) || 0;
+      chart.innerHTML = '';
+      all.forEach(r => {
+        const bar = document.createElement('div');
+        bar.className = 'bar' + (r.total === min ? ' cheapest' : '') + (r.total === max ? ' expensive' : '');
+        bar.style.height = Math.max(8, Math.round((r.total / max) * 100)) + '%';
+        bar.title = r.departure + ': ' + money(r.total);
+        const tip = document.createElement('span'); tip.textContent = r.departure + ' — ' + money(r.total); bar.appendChild(tip);
+        chart.appendChild(bar);
+      });
+      document.getElementById('chartWrap').style.display = 'block';
+      // Table
+      let html = '<table><thead><tr><th>#</th><th>Depart → Return</th><th>Total</th><th>Per person</th><th>Flight</th><th>Hotel</th><th>Cruise</th><th>Saving vs max</th><th>Budget</th></tr></thead><tbody>';
+      top.forEach((r, i) => {
+        html += '<tr><td>' + (i + 1) + '</td><td>' + r.departure + ' → ' + r.returnDate + '</td><td><strong>' + money(r.total) + '</strong></td><td>' + money(r.perPerson) + '</td><td>' + money(r.flight) + '</td><td>' + money(r.hotel) + '</td><td>' + money(r.cruise) + '</td><td>' + money(r.savingsVsMax) + '</td><td>' + (r.underBudget === null ? '—' : (r.underBudget ? '<span class="badge under">Under</span>' : '<span class="badge over">Over</span>')) + '</td></tr>';
+      });
+      html += '</tbody></table><p class="muted">Estimates only. Totals are flight + hotel + cruise for the components you checked.</p>';
+      document.getElementById('results').innerHTML = html;
+    });
+  }
+  const liveBtn = document.getElementById('liveCheckBtn');
+  if (liveBtn) {
+    liveBtn.addEventListener('click', async function () {
+      const hasKeys = document.getElementById('duffelKey').value || document.getElementById('hotelKey').value || document.getElementById('cruiseKey').value;
+      document.getElementById('liveStatus').textContent = hasKeys
+        ? 'Keys entered in this page session only (not saved). Live fetch functions are placeholders — wire them to Duffel / hotel / cruise APIs, then estimates will be replaced per date.'
+        : 'No keys entered yet. Add a key above, then wire the placeholder fetch functions in the source to use it. Estimates are being used for now.';
+    });
+  }
+}
+
+// Export for Node testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { generateResults, priceFlight, priceHotel, priceCruise, hashString, seededRandom };
+}
+</script>
+</body>
+</html>
